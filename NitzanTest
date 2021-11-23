@@ -36,7 +36,7 @@ data\catalog.csv
 // Definitions
 typedef enum { false, true } bool;
 typedef enum { readId, readPassword, readName, readPhone } FieldUser;
-typedef enum { productName, productBrand, productPrice, productQuantity } FieldProduct;
+typedef enum { productName, productCompany, productPrice, productQuantity, productCategory } FieldProduct;
 typedef enum { none, customer, manager } UserType;
 
 // Structs
@@ -56,9 +56,10 @@ typedef struct Manager {
 } Manager;
 typedef struct Product {
 	char* name;
-	char* brand;
+	char* company;
 	char* quantity;
 	char* price;
+	char* category;
 } Product;
 typedef struct Order {
 	Product* products;
@@ -102,7 +103,6 @@ FILE* openFile(char* filename, char* skipFormat);
 // Authentication functions declarations
 void registerCustomer(Customer* c);
 void registerManager(Manager* m);
-bool loginUser();
 bool verifyName(Details* d);
 bool verifyPassword(Details* d);
 bool verifyId(Details* d, bool* flag, int regType);
@@ -110,10 +110,11 @@ bool verifyAge(Customer* c);
 bool verifyPhone(Details* d);
 bool TermsAndConditions();
 UserType findUserType(char* id);
+UserType loginUser();
 
 // Catalog
 void addProduct();
-char* readProduct(char* filename, char* productName, char* _brand, FieldProduct field);
+char* readProduct(char* filename, char* productName, char* _company, FieldProduct field);
 
 // Welcome screen function declarations
 void welcomeScreen();
@@ -149,7 +150,7 @@ void appendStringNewLine(char** _str1, char* _str2) {
 }
 void inputString(char** _str) {
 	char str[100];
-	scanf("%s", str);
+	scanf_s("%s", str, 100);
 	*_str = malloc(strlen(str) * sizeof(char) + sizeof(char));
 	strcpy(*_str, str);
 }
@@ -238,7 +239,9 @@ void checkFiles() //Create the defualts files.
 	if (!doesFileExists(PATH_CUSTOMERS))
 		writeFile(PATH_CUSTOMERS, "Username,Identity,Password,Age,Points,Phone\n");
 	if (!doesFileExists(PATH_MANAGERS))
-		writeFile(PATH_MANAGERS, "Username,Identity,Password,Phone");
+		writeFile(PATH_MANAGERS, "Username,Identity,Password,Phone\n");
+	if (!doesFileExists(PATH_CATALOG))
+		writeFile(PATH_CATALOG, "Name,Company,Price,Quantity,Category\n");
 }
 char* readUser(char* filename, char* id, FieldUser field) {
 	char nameString[100], ID[20], password[100], phoneString[20];
@@ -380,29 +383,6 @@ void registerManager(Manager* m)
 		return;
 
 	writeManager(m);
-}
-bool loginUser() {
-	char* id;
-	printf("ID --> ");
-	inputString(&id);
-	UserType type = findUserType(id);
-	if (!type) {
-		printStrLine("The entered ID wasn't found...");
-		return false;
-	}
-
-	char* pass;
-	printf("Password --> ");
-	inputString(&pass);
-	if (strcmp(readUser(type == customer ? PATH_CUSTOMERS : PATH_MANAGERS, id, readPassword), pass) == 0) {
-		printStr("You've successfully logged in as a ");
-		printStr(type == customer ? "customer.\n" : "manager.\n");
-		return true;
-	}
-	else {
-		printStrLine("The entered password is incorrect...\n");
-		return false;
-	}
 }
 bool verifyName(Details* d)
 {
@@ -582,98 +562,181 @@ bool TermsAndConditions()
 }
 UserType findUserType(char* id) {
 	char* ID = readUser(PATH_CUSTOMERS, id, readId);
+	
 	if (ID)
 		return customer;
+	
 	ID = readUser(PATH_MANAGERS, id, readId);
 	if (ID)
 		return manager;
+	
 	return none;
 }
+UserType loginUser() {
+	char* id;
+	
+	printf("ID --> ");
+	inputString(&id);
+	
+	UserType type = findUserType(id);
+	if (!type) {
+		printStrLine("The entered ID wasn't found...\n");
+		return none;
+	}
+
+	char* pass;
+	printf("Password --> ");
+	inputString(&pass);
+
+	if (strcmp(readUser(type == customer ? PATH_CUSTOMERS : PATH_MANAGERS, id, readPassword), pass) == 0) {
+		printStr("You've successfully logged in as a ");
+		if (type == customer)
+		{
+			printStr("customer.\n");
+			return customer;
+		}
+		
+		if (type == manager)
+		{
+			printStr("manager.\n");
+			return manager;
+		}
+	}
+	
+	else 
+	{
+		printStrLine("The entered password is incorrect...\n");
+		return none;
+	}
+}
+
+//Menu's
+void welcomeScreen();
+void customerMenu();
+void managerMenu();
 
 // Catalog
-void addProduct() {
-	bool nameFlag = false;
+void addProduct() 
+{	
 	char* rProductName = NULL;
-	while (!productName) {
-		printStrLine("Please enter the name of the product ");
+	while (!rProductName)
+	{
+		printStr("Input product name --> ");
 		inputString(&rProductName);
-		if (readProduct(PATH_CATALOG, rProductName, NULL, productName))
-			nameFlag = true;
-		int length = strlen(rProductName);
-		for (int i = 0; i < length; i++) {
-			if (!rProductName) continue;
-			if (!(rProductName[i] >= 'a' && rProductName[i] <= 'z' || rProductName[i] >= 'A' && rProductName[i] <= 'Z')) {
+
+		for (int i = 0; i < strlen(rProductName); i++)
+		{
+			if (!(rProductName[i] >= 'a' && rProductName[i] <= 'z' || rProductName[i] >= 'A' && rProductName[i] <= 'Z')) 
+			{
 				rProductName = NULL;
-				printStrLine("The entered product name is invalid...");
+				printStrLine("Invalid product name, Try again\n");
+				break;
 			}
 		}
 	}
-	char* rProductBrand = NULL;
-	while (!rProductBrand) {
-		printStrLine("Please enter the brand of the product ");
-		inputString(&rProductBrand);
-		if (nameFlag) {
-			if (strcmp(readProduct(PATH_CATALOG, rProductName, NULL, productBrand), rProductBrand) == 0) {
-				printStrLine("The entered product from the same brand is already in the system, aborting...");
+	
+	char* rProductCompany = NULL;
+	while (!rProductCompany) 
+	{
+		printStr("Input company product --> ");
+		inputString(&rProductCompany);
+
+		if (doesProductExist(PATH_CATALOG, rProductName, rProductCompany)) 
+		{
+				printStrLine("Company product already in stock.");
 				return;
-			}
 		}
-		int length = strlen(rProductBrand);
-		for (int i = 0; i < length; i++) {
-			if (!rProductBrand) continue;
-			if (!(rProductBrand[i] >= 'a' && rProductBrand[i] <= 'z' || rProductBrand[i] >= 'A' && rProductBrand[i] <= 'Z')) {
-				rProductBrand = NULL;
-				printStrLine("The entered product brand is invalid...");
+
+		for (int i = 0; i < strlen(rProductCompany); i++) 
+		{
+			if (!(rProductCompany[i] >= 'a' && rProductCompany[i] <= 'z' || rProductCompany[i] >= 'A' && rProductCompany[i] <= 'Z')) 
+			{
+				rProductCompany = NULL;
+				printStrLine("Invlaid company product, Try again\n");
+				break;
 			}
 		}
 	}
-	char* productPrice = NULL;
-	while (!productPrice) {
-		printStrLine("Please enter the price of the product ");
-		inputString(&productPrice);
-		bool flag = false;
-		int length = strlen(productPrice);
-		for (int i = 0; i < length; i++) {
-			if (!productPrice) continue;
-			if (productPrice[i] == '.' && (i == 0 || i == length - 1)) {
-				if ((i == 0 || i == length - 1) || flag) {
-					productPrice = NULL;
-					printStrLine("The entered price of the product is invalid...");
-					break;
-				}
-				else flag = true;
+	
+	char* rProductPrice = NULL;
+	while (!rProductPrice)
+	{
+		printStr("Input product price --> ");
+		inputString(&rProductPrice);
+		
+		for (int i = 0; i < strlen(rProductPrice); i++)
+		{
+			if (strlen(rProductPrice) == 1 && rProductPrice[i] == '0')
+			{
+				rProductPrice = NULL;
+				printStrLine("Invalid product price, Try again\n");
+				break;
 			}
-			if (!(productPrice[i] >= '0' && productPrice[i] <= '9') && productPrice[i] != '.') {
-				productPrice = NULL;
-				printStrLine("The entered price of the product is invalid...");
+			
+
+			if (!(rProductPrice[i] >= '0' && rProductPrice[i] <= '9') && rProductPrice[i] != '.')
+			{
+				rProductPrice = NULL;
+				printStrLine("Invalid prudct price, Try again\n");
+				break;
 			}
 		}
 	}
 
-	char* productQuantity = NULL;
-	while (!productQuantity) {
-		printStrLine("Please enter the quantity of the product ");
-		inputString(&productQuantity);
-		int length = strlen(productQuantity);
-		for (int i = 0; i < length; i++) {
-			if (!productQuantity) continue;
-			if (!(productQuantity[i] >= '0' && productQuantity[i] <= '9')) {
-				rProductBrand = NULL;
-				printStrLine("The entered quantity is invalid...");
+	char* rProductQuantity = NULL;
+	while (!rProductQuantity) 
+	{
+		printStr("Input product quantity --> ");
+		inputString(&rProductQuantity);
+		
+		for (int i = 0; i < strlen(rProductQuantity); i++)
+		{
+			if (!(rProductQuantity[i] >= '0' && rProductQuantity[i] <= '9'))
+			{
+				rProductQuantity = NULL;
+				printStrLine("Invalid quantity, Try again\n");
+				break;
 			}
 		}
 	}
+
+	/* NEED TO FINISH THE CATEGORY PART!!	
+	char* rProductCategory = NULL;
+	while (!rProductCategory)
+	{
+		printStr("Input product category --> ");
+		inputString(&rProductCategory);
+
+		for (int i = 0; i < strlen(rProductCategory); i++)
+		{
+			if (!(rProductCategory[i] >= 'a' && rProductCategory[i] <= 'z' || rProductCategory[i] >= 'A' && rProductCategory[i] <= 'Z'))
+			{
+				rProductCategory = NULL;
+				printStrLine("Invlaid company product");
+				break;
+			}
+		}
+
+		if (doesCategoryExist(PATH_CATALOG, rProductName, rProductCompany))
+		{
+			printStrLine("Company product already in stock.");
+			return;
+		}
+	}*/
 
 	char* output = copyString("");
-	appendStringComma(&output, productName);
-	appendStringComma(&output, rProductBrand);
-	appendStringComma(&output, productPrice);
-	appendStringNewLine(&output, productQuantity);
+	appendStringComma(&output, rProductName);
+	appendStringComma(&output, rProductCompany);
+	appendStringComma(&output, rProductPrice);
+	appendStringNewLine(&output, rProductQuantity);
+	//appendStringNewLine(&output, rProductCategory);
 	writeFile(PATH_CATALOG, output);
 	free(output);
 }
-char* readProduct(char* filename, char* productName, char* _brand, FieldProduct field) {
-	char name[100], brand[100], quantity[100], price[20];
+bool doesProductExist(char* filename, char* _productName, char* _company) 
+{
+	char name[100], company[100], price[20], quantity[100], category[100];
+
 	FILE* file;
 	file = fopen(filename, "r");
 	if (!file) {
@@ -682,67 +745,122 @@ char* readProduct(char* filename, char* productName, char* _brand, FieldProduct 
 	}
 
 	char buf[500];
-	while (fscanf(file, "%s", buf) == 1) {
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", name, brand, quantity, price);
-		if (strcmp(productName, name) == 0 && brand ? strcmp(_brand, brand) == 0 : 1) {
+	while (fscanf(file, "%s", buf) == 1)
+	{
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
+
+		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
+			return true;
+	}
+	return false;
+}
+char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field) {
+	char name[100], company[100], price[20], quantity[100], category[100];
+	
+	FILE* file;
+	file = fopen(filename, "r");
+	if (!file) {
+		printStrLine("Error.");
+		return;
+	}
+
+	char buf[500];
+	while (fscanf(file, "%s", buf) == 1) 
+	{
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
+
+		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
+		{
 			if (field == productName) return name;
-			if (field == productBrand) return brand;
-			if (field == productQuantity) return quantity;
+			if (field == productCompany) return company;
 			if (field == productPrice) return price;
+			if (field == productQuantity) return quantity;
+			if (field == productCategory) return category;
 		}
 	}
 	return NULL;
 }
 
-// Welcome screen functions definitions
+// Menu's
 void welcomeScreen() {
 	Customer c;
 	Manager m;
 	
-	int regLog = 1, regType = 1, managerCode;
+	int loop = 1, regLog = 1, regType = 1, managerCode;
 
 	printf("Welcome to \"Market for you\"\n'1' Register\n'2' Log in\n'3' Exit\nInput --> ");
 	scanf_s("%d", &regLog);
-		
-	switch (regLog)
+	
+	while (loop)
 	{
-	case 1:
-		printf("\nSign up as\n'1' Customer\n'2' Manager\n'3' Exit\nInput --> ");
-		scanf_s("%d", &regType);
-			
-		switch (regType)
+		switch (regLog)
 		{
 		case 1:
-			registerCustomer(&c);
+			printf("\nSign up as\n'1' Customer\n'2' Manager\n'3' Exit\nInput --> ");
+			scanf_s("%d", &regType);
+
+			switch (regType)
+			{
+			case 1:
+				registerCustomer(&c);
+				break;
+
+			case 2:
+				printf("Input manager code --> ");
+				scanf_s("%d", &managerCode);
+				
+				if (MANAGER_CODE == managerCode)
+					registerManager(&m);
+				
+				else
+					printf("Wrong Code\n");
+				break;
+
+			case 3:
+				break;
+
+			default:
+				printf("Error input, Try again!\n\nInput --> ");
+				scanf("%d", &regType);
+				break;
+
+			}
 			break;
+
 		case 2:
-			printf("Input manager code --> ");
-			scanf_s("%d", &managerCode);
-			if (MANAGER_CODE == managerCode)
-				registerManager(&m);
+			if (loginUser() == customer)
+				customerMenu();
+
+			else if (loginUser() == manager)
+				managerMenu();
+
 			else
-				printf("Wrong Code\n");
+				printf("Failed login\n");
 			break;
+
 		case 3:
+			loop = 0;
 			break;
+
 		default:
-			printf("Error input, Try again!\n");
+			printf("Invalid input, Try again!\n\nInput --> ");
+			scanf_s("%d", &regLog);
 			break;
+
 		}
-		break;
-	case 2:
-		loginUser();
-		break;
-	case 3:
-		break;
-	default:
-		printf("Error input, Try again!\n");
-		break;
 	}
+}
+void customerMenu()
+{
+
+}
+void managerMenu()
+{
+
 }
 Product selectProduct() {
 	Product product = { NULL, NULL, NULL, NULL };
-	char name[100], brand[100], quantity[100], price[100];
+	char name[100], company[100], quantity[100], price[100];
 
 	FILE* file;
 	file = fopen(PATH_CATALOG, "r");
@@ -753,10 +871,10 @@ Product selectProduct() {
 
 	char buf[500];
 	int i = 1;
-	printf("\tNAME\t\tBRAND\t\tQUANTITY\t\tPRICE\n");
+	printf("\tNAME\t\tCOMPANY\t\tQUANTITY\t\tPRICE\n");
 	while (fscanf(file, "%s", buf) == 1) {
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", name, brand, quantity, price);
-		printf("%d.\t%s\t\t%s\t\t%s\t\t\t%s\n", i, name, brand, quantity, price);
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price);
+		printf("%d.\t%s\t\t%s\t\t%s\t\t\t%s\n", i, name, company, quantity, price);
 		i++;
 	}
 	printStr("Please select a product --> ");
@@ -773,9 +891,9 @@ Product selectProduct() {
 			j++;
 		}
 		else {
-			sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", name, brand, quantity, price);
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price);
 			product.name = copyString(name);
-			product.brand = copyString(brand);
+			product.company = copyString(company);
 			product.quantity = copyString(quantity);
 			product.price = copyString(price);
 			return product;
@@ -785,12 +903,13 @@ Product selectProduct() {
 }
 
 void printProduct(Product* product) {
-	printf("Name %s\tBrand %s\tPrice %s\tQuantity %s", product->name, product->brand, product->price, product->quantity);
+	printf("Name %s\tCompany %s\tPrice %s\tQuantity %s", product->name, product->company, product->price, product->quantity);
 }
 
 int main() {
 	checkFolder();
 	checkFiles();
-	welcomeScreen();
+	addProduct();
+	//welcomeScreen();
 	return 0;
 }
