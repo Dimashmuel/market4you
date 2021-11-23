@@ -92,6 +92,7 @@ void readFile(char* filename) {
 bool doesFileExists(char* filename) {
     struct stat buffer;
     return !stat(filename, &buffer);
+
 }
 
 int main() {
