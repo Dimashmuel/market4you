@@ -1,836 +1,836 @@
-//#define _CRT_SECURE_NO_WARNINGS
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <sys/stat.h>
-//#include <sys/types.h>
-//
-//// CONSTS
-//#define LEGAL_AGE 16
-//#define MANAGER_CODE 1111
-//#define PHONE_NUM_LEN 10
-//#define MIN_PASSWORD_LEN 6
-//
-//// FILES
-//#define PATH_CUSTOMERS "data\\users\\customers.csv"
-//#define PATH_MANAGERS "data\\users\\managers.csv"
-//#define PATH_CATALOG "data\\catalog.csv"
-//#define PATH_ORDERS_CONFIMRED "data\\orders\\unconfirmed\\"
-//#define PATH_ORDERS_UNCONFIRMED "data\\orders\\confirmed\\"
-//
-//// FOLDERS
-//#define FOLDER_DATA "data"
-//#define FOLDER_DATA_USERS "data\\users"
-//#define FOLDER_DATA_ORDERS "data\\orders"
-//#define FOLDER_DATA_ORDERS_CONFIRMED "data\\orders\\confirmed"
-//#define FOLDER_DATA_ORDERS_UNCONFIRMED "data\\orders\\unconfirmed"
-//
-//// Definitions
-//typedef enum { false, true } bool;
-//typedef enum { readId, readPassword, readName, readPhone } FieldUser;
-//typedef enum { productName, productCompany, productPrice, productQuantity, productCategory } FieldProduct;
-//typedef enum { none, customer, manager } UserType;
-//
-////Structs
-//typedef struct Details
-//{
-//	char* name;
-//	char* ID;
-//	char* password;
-//	char* phone;
-//}Details;
-//
-//typedef struct Product 
-//{
-//	char* name;
-//	char* company;
-//	char* quantity;
-//	char* price;
-//	char* category;
-//} Product;
-//
-///*typedef struct Order
-//{
-//	Product* products;
-//	char* customerId;
-//	char* orderId;
-//	char* totalOrder;
-//} Order;
-//
-//typedef struct Date {
-//	int day, month, year;
-//} Date;*/
-//
-////String functions declarations
-//void inputString(char* _str);
-//void appendString(char** _str1, char* _str2);
-//void appendStringComma(char** _str1, char* _str2);
-//void appendStringNewLine(char** _str1, char* _str2);
-//char* copyString(char* _str);
-//
-//// String functions definitions
-//void inputString(char** _str) 
-//{
-//	char str[100];
-//	
-//	scanf_s("%s", str, 100);
-//	*_str = malloc(strlen(str) * sizeof(char) + sizeof(char));
-//	strcpy(*_str, str);
-//}
-//void appendString(char** _str1, char* _str2) 
-//{
-//	char* str = malloc((strlen(*_str1) + strlen(_str2)) * sizeof(char) + sizeof(char));
-//	if (str == NULL) exit(1);
-//	
-//	strcpy(str, *_str1);
-//	strcat(str, _str2);
-//	free(*_str1);
-//	*_str1 = str;
-//}
-//void appendStringComma(char** _str1, char* _str2) 
-//{
-//	appendString(_str1, _str2);
-//	appendString(_str1, ",");
-//}
-//void appendStringNewLine(char** _str1, char* _str2) 
-//{
-//	appendString(_str1, _str2);
-//	appendString(_str1, "\n");
-//}
-//char* copyString(char* _str)
-//{
-//	char* str = malloc(sizeof(char) * strlen(_str) + sizeof(char));
-//	if (str == NULL)
-//		exit(1);
-//
-//	strcpy(str, _str);
-//	return str;
-//}
-//
-////File declarations
-////void readFile(char* filename);
-//void checkFiles();
-//void checkFolder();
-//void createFolder(char* dirname);
-//void writeFile(char* filename, char* content);
-//void writeUserType(Details* d, UserType type);
-//char* readUser(char* filename, FieldUser field);
-//bool doesFileExists(char* filename);
-//FILE* openFile(char* filename, char* access, char* skipFormat);
-//
-//// Files functions definitions
-//void checkFiles() //Create the defualts files.
-//{
-//	if (!doesFileExists(PATH_CUSTOMERS))
-//		writeFile(PATH_CUSTOMERS, "Username,Identity,Password,Points,Phone\n");
-//	if (!doesFileExists(PATH_MANAGERS))
-//		writeFile(PATH_MANAGERS, "Username,Identity,Password,Phone\n");
-//	if (!doesFileExists(PATH_CATALOG))
-//		writeFile(PATH_CATALOG, "Name,Company,Price,Quantity,Category\n");
-//}
-//void checkFolder() //Create the defualts folders.
-//{
-//	if (!doesFileExists(FOLDER_DATA))
-//		createFolder(FOLDER_DATA);
-//
-//	if (!doesFileExists(FOLDER_DATA_USERS))
-//		createFolder(FOLDER_DATA_USERS);
-//
-//	if (!doesFileExists(FOLDER_DATA_ORDERS))
-//		createFolder(FOLDER_DATA_ORDERS);
-//
-//	if (!doesFileExists(FOLDER_DATA_ORDERS_CONFIRMED))
-//		createFolder(FOLDER_DATA_ORDERS_CONFIRMED);
-//
-//	if (!doesFileExists(FOLDER_DATA_ORDERS_UNCONFIRMED))
-//		createFolder(FOLDER_DATA_ORDERS_UNCONFIRMED);
-//}
-//void createFolder(char* dirname)
-//{
-//	int check;
-//	check = mkdir(dirname);
-//	if (check)
-//	{
-//		printf("Unable to create folder\n");
-//		exit(1);
-//	}
-//}
-//void writeFile(char* filename, char* content) 
-//{
-//	FILE* file;
-//	file = openFile(filename, "ab+", NULL);
-//	if (!file) 
-//	{
-//		printf("Error.\n");
-//		return;
-//	}
-//	fprintf(file, "%s", content);
-//	fclose(file);
-//}
-//void writeUserType(Details* d, UserType type)
-//{
-//	char* output = copyString("");
-//	appendStringComma(&output, d->name);
-//	appendStringComma(&output, d->ID);
-//	appendStringComma(&output, d->password);
-//	if (type == customer)
-//		appendStringComma(&output, "0.0");
-//	appendStringNewLine(&output, d->phone);
-//	type == customer ? writeFile(PATH_CUSTOMERS, output) : writeFile(PATH_MANAGERS, output);
-//	free(output);
-//}
-//char* readUser(char* filename, char* id, FieldUser field) 
-//{
-//	char nameString[100], ID[20], password[100], phoneString[20];
-//	FILE* file;
-//	file = fopen(filename, "r");
-//	if (!file) {
-//		printf("Error.\n");
-//		return;
-//	}
-//
-//	char buf[500];
-//	while (fscanf(file, "%s", buf) == 1) 
-//	{
-//		sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, nameString, phoneString);
-//		if (strcmp(ID, id) == 0) {
-//			if (field == readName) return nameString;
-//			if (field == readId) return ID;
-//			if (field == readPassword) return password;
-//			if (field == readPhone) return phoneString;
-//		}
-//	}
-//	return NULL;
-//}
-//bool doesFileExists(char* filename) 
-//{
-//	struct stat buffer;
-//	return !stat(filename, &buffer);
-//}
-//FILE* openFile(char* filename, char* access, char* skipFormat) 
-//{
-//	FILE* file;
-//	file = fopen(filename, access);
-//	if (!file)
-//	{
-//		printf("Error.\n");
-//		return;
-//	}
-//	if (skipFormat)
-//		fprintf(file, skipFormat);
-//	return file;
-//}
-//
-//// Authentication functions declarations
-//void registerUserType(UserType type);
-//bool verifyName(Details* d);
-//bool verifyPassword(Details* d);
-//bool verifyId(Details* d, bool* flag);
-//bool verifyAge();
-//bool verifyPhone(Details* d);
-//bool TermsAndConditions();
-//UserType findUserType(char* id);
-//UserType loginUser();
-//
-//// Authentication functions definitions
-//void registerUserType(UserType type)
-//{
-//	Details d;
-//	{
-//		printf("\nRegister Stage:\n");
-//		while (!verifyName(&d))
-//			printf("Invalid, Please try again!\n\n");
-//
-//		while (!verifyPassword(&d))
-//			printf("Invalid, Please try again!\n\n");
-//
-//		bool flag = false;
-//		while (!verifyId(&d, &flag))
-//		{
-//			if (flag)
-//			{
-//				printf("ID already exist in the system.\n");
-//				int choice = 1;
-//				printf("\nAvailable actions:\n'1' Wrong ID try again\n'2' Try to login\n'3' Reported for Identity steal\n\nYour choice --> ");
-//				scanf_s("%d", &choice);
-//				switch (choice)
-//				{
-//				case 1:
-//					break;
-//				case 2:
-//					loginUser();
-//					return;
-//				case 3:
-//					printf("We are sry to hear, Your report will be treated\n");
-//					return;
-//				default:
-//					printf("Invalid input, Try again\n");
-//					break;
-//				}
-//			}
-//			else
-//				printf("Invalid, Please try again!\n\n");
-//		}
-//
-//		if (type == customer)
-//		{
-//			if (!verifyAge())
-//				return false;
-//			// Credit points ??
-//		}
-//
-//		while (!verifyPhone(&d))
-//			printf("Invalid, Please try again!\n\n");
-//
-//		if (!TermsAndConditions())
-//			return;
-//
-//		writeUserType(&d, type);
-//	}
-//}
-//bool verifyName(Details* d)
-//{
-//	char string[100];
-//	printf("Name --> ");
-//	scanf(" %[^\n]s", string);
-//
-//	for (int i = 0; i < strlen(string); i++)
-//		if (!((string[i] >= 'a' && string[i] <= 'z') || (string[i] >= 'A' && string[i] <= 'Z') || (string[i] == ' ')))
-//		{
-//			printf("Must contain only English characters!\n");
-//			return false;
-//		}
-//
-//	char* str = copyString(string);
-//	d->name = str;
-//
-//	return true;
-//}
-//bool verifyPassword(Details* d)
-//{
-//	char* str;
-//	int letters = 0, numbers = 0;
-//
-//	printf("Password --> ");
-//	inputString(&str);
-//	
-//	if (strlen(str) < MIN_PASSWORD_LEN)
-//		return false;
-//
-//	for (int i = 0; i < strlen(str); i++)
-//	{
-//		if (!(str[i] >= 'a' && str[i] <= 'z')) 
-//		{
-//			if (!(str[i] >= 'A' && str[i] <= 'Z')) 
-//			{
-//				if (!(str[i] >= '0' && str[i] <= '9'))
-//					return false;
-//				else numbers++;
-//			}
-//			else letters++;
-//		}
-//		else letters++;
-//	}
-//
-//	if (!numbers)
-//		printf("Password must contain at least one number\n");
-//
-//	if (!letters)
-//		printf("Password must contain at least one letter\n");
-//	
-//	if (letters && numbers) 
-//	{
-//		d->password = str;
-//		return true;
-//	}
-//	return false;
-//}
-//bool verifyId(Details* d, bool* flag)
-//{
-//	char* str;
-//	
-//	printf("ID --> ");
-//	inputString(&str);
-//
-//	long idVal = strtol(str, NULL, 10);
-//	int Digit1, Digit2, Digit3, Digit4, Digit5, Digit6, Digit7, Digit8, Digit9, Sum, Res;
-//
-//	if ((idVal <= 999999999) && (idVal >= 100000000)) 
-//	{
-//		Digit1 = (idVal % 1000000000) / 100000000;   
-//		Digit2 = (idVal % 100000000) / 10000000;	 
-//		Digit3 = (idVal % 10000000) / 1000000;      
-//		Digit4 = (idVal % 1000000) / 100000;         
-//		Digit5 = (idVal % 100000) / 10000;         
-//		Digit6 = (idVal % 10000) / 1000;            
-//		Digit7 = (idVal % 1000) / 100;              
-//		Digit8 = (idVal % 100) / 10;                 
-//		Digit9 = (idVal % 10);                      
-//
-//		Digit1 = Digit1 * 1;				
-//		Digit2 = Digit2 * 2;				
-//		Digit3 = Digit3 * 1;					
-//		Digit4 = Digit4 * 2;					
-//		Digit5 = Digit5 * 1;					
-//		Digit6 = Digit6 * 2;					
-//		Digit7 = Digit7 * 1;					
-//		Digit8 = Digit8 * 2;					
-//
-//		Digit2 = ((Digit2 / 10) + (Digit2 % 10));	
-//		Digit4 = ((Digit4 / 10) + (Digit4 % 10));	
-//		Digit6 = ((Digit6 / 10) + (Digit6 % 10));	
-//		Digit8 = ((Digit8 / 10) + (Digit8 % 10));	
-//
-//		Sum = Digit1 + Digit2 + Digit3 + Digit4 + Digit5 + Digit6 + Digit7 + Digit8;  
-//
-//		Res = 10 - (Sum % 10);
-//
-//		if (Res == Digit9) 
-//		{
-//			if (findUserType(str)) 
-//			{
-//				*flag = true;
-//				return false;
-//			}
-//
-//			d->ID = str;
-//			return true;
-//		}
-//
-//		else if (Res != Digit9)
-//			return false;
-//	}
-//
-//	else 
-//		return false;
-//}
-//bool verifyAge()
-//{
-//	int age;
-//
-//	printf("Age --> ");
-//	scanf_s("%d", &age);
-//
-//	if (age < LEGAL_AGE)
-//	{
-//		printf("We are sry, The minimum age is 16\n");
-//		return false;
-//	}
-//	return true;
-//}
-//bool verifyPhone(Details* d)
-//{
-//	char* str;
-//	
-//	printf("Phone --> ");
-//	inputString(&str);
-//	if (str == NULL)
-//		exit(1);
-//
-//	for (int i = 0; i < strlen(str); i++)
-//	{
-//		if (!(str[i] >= '0' && str[i] <= '9'))
-//		{
-//			printf("Phone number contain only Digits!\n");
-//			return false;
-//		}
-//	}
-//
-//	if (strlen(str) != PHONE_NUM_LEN)
-//	{
-//		printf("Phone number must contain ten Digits!\n");
-//		return false;
-//	}
-//
-//	d->phone = str;
-//	return true;
-//}
-//bool TermsAndConditions()
-//{
-//	char terms;
-//	
-//	printf("Do you agree to the terms and conditions (Y/N)\nInput --> ");
-//	getchar();
-//	scanf("%c", &terms);
-//	
-//	while (terms != 'Y' || terms != 'N')
-//	{
-//		if (terms == 'Y')
-//			return true;
-//		else if (terms == 'N')
-//			return false;
-//		else
-//		{
-//			printf("Invalid input, Try again\nInput --> ");
-//			getchar();
-//			scanf("%c", &terms);
-//		}
-//	}
-//}
-//UserType findUserType(char* id) 
-//{
-//	char* ID = readUser(PATH_CUSTOMERS, id, readId);
-//
-//	if (ID)
-//		return customer;
-//
-//	ID = readUser(PATH_MANAGERS, id, readId);
-//	if (ID)
-//		return manager;
-//
-//	return none;
-//}
-//UserType loginUser() 
-//{
-//	char* id, *pass;
-//
-//	printf("ID --> ");
-//	inputString(&id);
-//
-//	UserType type = findUserType(id);
-//	if (!type) 
-//	{
-//		printf("ID doesnt exist\n");
-//		return none;
-//	}
-//
-//	printf("Password --> ");
-//	inputString(&pass);
-//
-//	if (strcmp(readUser(type == customer ? PATH_CUSTOMERS : PATH_MANAGERS, id, readPassword), pass) == 0) 
-//	{
-//		printf("You've successfully logged in as a ");
-//		if (type == customer)
-//		{
-//			printf("customer.\n");
-//			return customer;
-//		}
-//
-//		if (type == manager)
-//		{
-//			printf("manager.\n");
-//			return manager;
-//		}
-//	}
-//
-//	else
-//	{
-//		printf("Invalid Password\n");
-//		return none;
-//	}
-//}
-//
-////Catalog declarations
-//void addProduct();
-//void printProduct(Product* product);
-//bool doesProductExist(char* filename, char* _productName, char* _company);
-//Product selectProduct();
-///*char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field);*/
-//
-//// Catalog definitions
-//void addProduct()
-//{
-//	char* rProductName = NULL;
-//	while (!rProductName)
-//	{
-//		printf("Product name --> ");
-//		inputString(&rProductName);
-//
-//		for (int i = 0; i < strlen(rProductName); i++)
-//		{
-//			if (!(rProductName[i] >= 'a' && rProductName[i] <= 'z' || rProductName[i] >= 'A' && rProductName[i] <= 'Z'))
-//			{
-//				rProductName = NULL;
-//				printf("Invalid product name\n");
-//				break;
-//			}
-//		}
-//	}
-//	
-//	char* rProductCompany = NULL;
-//	while (!rProductCompany)
-//	{
-//		printf("Company product --> ");
-//		inputString(&rProductCompany);
-//
-//		if (doesProductExist(PATH_CATALOG, rProductName, rProductCompany))
-//		{
-//			printf("Company product already in stock\n");
-//			return;
-//		}
-//
-//		for (int i = 0; i < strlen(rProductCompany); i++)
-//		{
-//			if (!(rProductCompany[i] >= 'a' && rProductCompany[i] <= 'z' || rProductCompany[i] >= 'A' && rProductCompany[i] <= 'Z'))
-//			{
-//				rProductCompany = NULL;
-//				printf("Invlaid company product\n");
-//				break;
-//			}
-//		}
-//	}
-//
-//	char* rProductPrice = NULL;
-//	while (!rProductPrice)
-//	{
-//		printf("Product price --> ");
-//		inputString(&rProductPrice);
-//
-//		for (int i = 0; i < strlen(rProductPrice); i++)
-//		{
-//			if (strlen(rProductPrice) == 1 && rProductPrice[i] == '0')
-//			{
-//				rProductPrice = NULL;
-//				printf("Invalid product price\n");
-//				break;
-//			}
-//
-//			if (!(rProductPrice[i] >= '0' && rProductPrice[i] <= '9') && rProductPrice[i] != '.')
-//			{
-//				rProductPrice = NULL;
-//				printf("Invalid prudct price\n");
-//				break;
-//			}
-//		}
-//	}
-//
-//	char* rProductQuantity = NULL;
-//	while (!rProductQuantity)
-//	{
-//		printf("Product quantity --> ");
-//		inputString(&rProductQuantity);
-//
-//		for (int i = 0; i < strlen(rProductQuantity); i++)
-//		{
-//			if (!(rProductQuantity[i] >= '0' && rProductQuantity[i] <= '9'))
-//			{
-//				rProductQuantity = NULL;
-//				printf("Invalid product quantity\n");
-//				break;
-//			}
-//		}
-//	}
-//
-//	char* rProductCategory = NULL;
-//	while (!rProductCategory)
-//	{
-//		printf("Product category --> ");
-//		inputString(&rProductCategory);
-//
-//		for (int i = 0; i < strlen(rProductCategory); i++)
-//		{
-//			if (!(rProductCategory[i] >= 'a' && rProductCategory[i] <= 'z' || rProductCategory[i] >= 'A' && rProductCategory[i] <= 'Z'))
-//			{
-//				rProductCategory = NULL;
-//				printf("Invlaid input\n");
-//				break;
-//			}
-//		}
-//	}
-//
-//	char* output = copyString("");
-//	appendStringComma(&output, rProductName);
-//	appendStringComma(&output, rProductCompany);
-//	appendStringComma(&output, rProductPrice);
-//	appendStringComma(&output, rProductQuantity);
-//	appendStringNewLine(&output, rProductCategory);
-//	writeFile(PATH_CATALOG, output);
-//	free(output);
-//}
-//void printProduct(Product* product)
-//{
-//	printf("Name %s\tCompany %s\tPrice %s\tQuantity %s\tCategory %s\n", product->name, product->company, product->price, product->quantity, product->category);
-//}
-//bool doesProductExist(char* filename, char* _productName, char* _company)
-//{
-//	char name[100], company[100], price[20], quantity[100], category[100];
-//
-//	FILE* file;
-//	file = fopen(filename, "r");
-//	if (!file) {
-//		printf("Error\n");
-//		return;
-//	}
-//
-//	char buf[500];
-//	while (fscanf(file, "%s", buf) == 1)
-//	{
-//		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
-//
-//		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
-//			return true;
-//	}
-//	return false;
-//}
-//Product selectProduct() 
-//{
-//	Product product = { NULL, NULL, NULL, NULL, NULL };
-//	char name[100], company[100], quantity[100], price[100], category[100];
-//
-//	FILE* file;
-//	file = fopen(PATH_CATALOG, "r");
-//	if (!file) 
-//	{
-//		printf("Error\n");
-//		return;
-//	}
-//
-//	char buf[500];
-//	int i = 1;
-//	
-//	printf("\tNAME\t\tCOMPANY\t\tQUANTITY\t\tPRICE\t\tCATEGORY\n");
-//	
-//	while (fscanf(file, "%s", buf) == 1) 
-//	{
-//		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price, category);
-//		printf("%d.\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\n", i, name, company, quantity, price, category);
-//		i++;
-//	}
-//
-//	printf("Select product --> ");
-//
-//	int res;
-//	scanf("%d", &res);
-//
-//	// retrieve the selected product
-//	int j = 1;
-//	file = fopen(PATH_CATALOG, "r");
-//	while (fscanf(file, "%s", buf) == 1 && j <= i) 
-//	{
-//		if (j != res) 
-//		{
-//			sscanf(buf, "%*s,*s,%*s,%*s,%*s");
-//			j++;
-//		}
-//		
-//		else 
-//		{
-//			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price, category);
-//			product.name = copyString(name);
-//			product.company = copyString(company);
-//			product.quantity = copyString(quantity);
-//			product.price = copyString(price);
-//			product.category = copyString(category);
-//			return product;
-//		}
-//	}
-//	return product;
-//}
-///*char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field) {
-//	char name[100], company[100], price[20], quantity[100], category[100];
-//
-//	FILE* file;
-//	file = fopen(filename, "r");
-//	if (!file) {
-//		printStrLine("Error.");
-//		return;
-//	}
-//
-//	char buf[500];
-//	while (fscanf(file, "%s", buf) == 1)
-//	{
-//		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
-//
-//		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
-//		{
-//			if (field == productName) return name;
-//			if (field == productCompany) return company;
-//			if (field == productPrice) return price;
-//			if (field == productQuantity) return quantity;
-//			if (field == productCategory) return category;
-//		}
-//	}
-//	return NULL;
-//}*/
-//
-//
-////Menu's declartions
-//void welcomeScreen();
-//void customerMenu();
-//void managerMenu();
-//
-////Menu's definitions
-//void welcomeScreen()
-//{
-//	int loop = 1, regLog = 1, regType = 1, managerCode;
-//
-//	printf("Welcome to \"Market for you\"\n'1' Register\n'2' Log in\n'3' Exit\nInput --> ");
-//	scanf_s("%d", &regLog);
-//
-//	while (loop)
-//	{
-//		switch (regLog)
-//		{
-//		case 1:
-//			printf("\nSign up as\n'1' Customer\n'2' Manager\n'3' Exit\nInput --> ");
-//			scanf_s("%d", &regType);
-//
-//			switch (regType)
-//			{
-//			case 1:
-//				registerUserType(customer);
-//				break;
-//
-//			case 2:
-//				printf("Input manager code --> ");
-//				scanf_s("%d", &managerCode);
-//
-//				if (MANAGER_CODE == managerCode)
-//					registerUserType(manager);
-//
-//				else
-//					printf("Wrong Code\n");
-//				
-//				break;
-//
-//			case 3:
-//				break;
-//
-//			default:
-//				printf("Error input, Try again!\n\nInput --> ");
-//				scanf_s("%d", &regType);
-//				break;
-//
-//			}
-//			break;
-//
-//		case 2:
-//			if (loginUser() == customer)
-//				customerMenu();
-//
-//			else if (loginUser() == manager)
-//				managerMenu();
-//
-//			else
-//				printf("Failed login\n");
-//			break;
-//
-//		case 3:
-//			loop = 0;
-//			break;
-//
-//		default:
-//			printf("Invalid input, Try again!\n\nInput --> ");
-//			scanf_s("%d", &regLog);
-//			break;
-//
-//		}
-//	}
-//}
-//void customerMenu()
-//{
-//	return;
-//}
-//void managerMenu()
-//{
-//	return;
-//}
-//
-//int main()
-//{
-//	checkFolder();
-//	checkFiles();
-//	welcomeScreen();
-//
-//	return 0;
-//}
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+// CONSTS
+#define LEGAL_AGE 16
+#define MANAGER_CODE 1111
+#define PHONE_NUM_LEN 10
+#define MIN_PASSWORD_LEN 6
+
+// FILES
+#define PATH_CUSTOMERS "data\\users\\customers.csv"
+#define PATH_MANAGERS "data\\users\\managers.csv"
+#define PATH_CATALOG "data\\catalog.csv"
+#define PATH_ORDERS_CONFIMRED "data\\orders\\unconfirmed\\"
+#define PATH_ORDERS_UNCONFIRMED "data\\orders\\confirmed\\"
+
+// FOLDERS
+#define FOLDER_DATA "data"
+#define FOLDER_DATA_USERS "data\\users"
+#define FOLDER_DATA_ORDERS "data\\orders"
+#define FOLDER_DATA_ORDERS_CONFIRMED "data\\orders\\confirmed"
+#define FOLDER_DATA_ORDERS_UNCONFIRMED "data\\orders\\unconfirmed"
+
+// Definitions
+typedef enum { false, true } bool;
+typedef enum { readId, readPassword, readName, readPhone } FieldUser;
+typedef enum { productName, productCompany, productPrice, productQuantity, productCategory } FieldProduct;
+typedef enum { none, customer, manager } UserType;
+
+//Structs
+typedef struct Details
+{
+	char* name;
+	char* ID;
+	char* password;
+	char* phone;
+}Details;
+
+typedef struct Product 
+{
+	char* name;
+	char* company;
+	char* quantity;
+	char* price;
+	char* category;
+} Product;
+
+/*typedef struct Order
+{
+	Product* products;
+	char* customerId;
+	char* orderId;
+	char* totalOrder;
+} Order;
+
+typedef struct Date {
+	int day, month, year;
+} Date;*/
+
+//String functions declarations
+void inputString(char* _str);
+void appendString(char** _str1, char* _str2);
+void appendStringComma(char** _str1, char* _str2);
+void appendStringNewLine(char** _str1, char* _str2);
+char* copyString(char* _str);
+
+// String functions definitions
+void inputString(char** _str) 
+{
+	char str[100];
+	
+	scanf_s("%s", str, 100);
+	*_str = malloc(strlen(str) * sizeof(char) + sizeof(char));
+	strcpy(*_str, str);
+}
+void appendString(char** _str1, char* _str2) 
+{
+	char* str = malloc((strlen(*_str1) + strlen(_str2)) * sizeof(char) + sizeof(char));
+	if (str == NULL) exit(1);
+	
+	strcpy(str, *_str1);
+	strcat(str, _str2);
+	free(*_str1);
+	*_str1 = str;
+}
+void appendStringComma(char** _str1, char* _str2) 
+{
+	appendString(_str1, _str2);
+	appendString(_str1, ",");
+}
+void appendStringNewLine(char** _str1, char* _str2) 
+{
+	appendString(_str1, _str2);
+	appendString(_str1, "\n");
+}
+char* copyString(char* _str)
+{
+	char* str = malloc(sizeof(char) * strlen(_str) + sizeof(char));
+	if (str == NULL)
+		exit(1);
+
+	strcpy(str, _str);
+	return str;
+}
+
+//File declarations
+//void readFile(char* filename);
+void checkFiles();
+void checkFolder();
+void createFolder(char* dirname);
+void writeFile(char* filename, char* content);
+void writeUserType(Details* d, UserType type);
+char* readUser(char* filename, FieldUser field);
+bool doesFileExists(char* filename);
+FILE* openFile(char* filename, char* access, char* skipFormat);
+
+// Files functions definitions
+void checkFiles() //Create the defualts files.
+{
+	if (!doesFileExists(PATH_CUSTOMERS))
+		writeFile(PATH_CUSTOMERS, "Username,Identity,Password,Points,Phone\n");
+	if (!doesFileExists(PATH_MANAGERS))
+		writeFile(PATH_MANAGERS, "Username,Identity,Password,Phone\n");
+	if (!doesFileExists(PATH_CATALOG))
+		writeFile(PATH_CATALOG, "Name,Company,Price,Quantity,Category\n");
+}
+void checkFolder() //Create the defualts folders.
+{
+	if (!doesFileExists(FOLDER_DATA))
+		createFolder(FOLDER_DATA);
+
+	if (!doesFileExists(FOLDER_DATA_USERS))
+		createFolder(FOLDER_DATA_USERS);
+
+	if (!doesFileExists(FOLDER_DATA_ORDERS))
+		createFolder(FOLDER_DATA_ORDERS);
+
+	if (!doesFileExists(FOLDER_DATA_ORDERS_CONFIRMED))
+		createFolder(FOLDER_DATA_ORDERS_CONFIRMED);
+
+	if (!doesFileExists(FOLDER_DATA_ORDERS_UNCONFIRMED))
+		createFolder(FOLDER_DATA_ORDERS_UNCONFIRMED);
+}
+void createFolder(char* dirname)
+{
+	int check;
+	check = mkdir(dirname);
+	if (check)
+	{
+		printf("Unable to create folder\n");
+		exit(1);
+	}
+}
+void writeFile(char* filename, char* content) 
+{
+	FILE* file;
+	file = openFile(filename, "ab+", NULL);
+	if (!file) 
+	{
+		printf("Error.\n");
+		return;
+	}
+	fprintf(file, "%s", content);
+	fclose(file);
+}
+void writeUserType(Details* d, UserType type)
+{
+	char* output = copyString("");
+	appendStringComma(&output, d->name);
+	appendStringComma(&output, d->ID);
+	appendStringComma(&output, d->password);
+	if (type == customer)
+		appendStringComma(&output, "0.0");
+	appendStringNewLine(&output, d->phone);
+	type == customer ? writeFile(PATH_CUSTOMERS, output) : writeFile(PATH_MANAGERS, output);
+	free(output);
+}
+char* readUser(char* filename, char* id, FieldUser field) 
+{
+	char nameString[100], ID[20], password[100], phoneString[20];
+	FILE* file;
+	file = fopen(filename, "r");
+	if (!file) {
+		printf("Error.\n");
+		return;
+	}
+
+	char buf[500];
+	while (fscanf(file, "%s", buf) == 1) 
+	{
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, nameString, phoneString);
+		if (strcmp(ID, id) == 0) {
+			if (field == readName) return nameString;
+			if (field == readId) return ID;
+			if (field == readPassword) return password;
+			if (field == readPhone) return phoneString;
+		}
+	}
+	return NULL;
+}
+bool doesFileExists(char* filename) 
+{
+	struct stat buffer;
+	return !stat(filename, &buffer);
+}
+FILE* openFile(char* filename, char* access, char* skipFormat) 
+{
+	FILE* file;
+	file = fopen(filename, access);
+	if (!file)
+	{
+		printf("Error.\n");
+		return;
+	}
+	if (skipFormat)
+		fprintf(file, skipFormat);
+	return file;
+}
+
+// Authentication functions declarations
+void registerUserType(UserType type);
+bool verifyName(Details* d);
+bool verifyPassword(Details* d);
+bool verifyId(Details* d, bool* flag);
+bool verifyAge();
+bool verifyPhone(Details* d);
+bool TermsAndConditions();
+UserType findUserType(char* id);
+UserType loginUser();
+
+// Authentication functions definitions
+void registerUserType(UserType type)
+{
+	Details d;
+	{
+		printf("\nRegister Stage:\n");
+		while (!verifyName(&d))
+			printf("Invalid, Please try again!\n\n");
+
+		while (!verifyPassword(&d))
+			printf("Invalid, Please try again!\n\n");
+
+		bool flag = false;
+		while (!verifyId(&d, &flag))
+		{
+			if (flag)
+			{
+				printf("ID already exist in the system.\n");
+				int choice = 1;
+				printf("\nAvailable actions:\n'1' Wrong ID try again\n'2' Try to login\n'3' Reported for Identity steal\n\nYour choice --> ");
+				scanf_s("%d", &choice);
+				switch (choice)
+				{
+				case 1:
+					break;
+				case 2:
+					loginUser();
+					return;
+				case 3:
+					printf("We are sry to hear, Your report will be treated\n");
+					return;
+				default:
+					printf("Invalid input, Try again\n");
+					break;
+				}
+			}
+			else
+				printf("Invalid, Please try again!\n\n");
+		}
+
+		if (type == customer)
+		{
+			if (!verifyAge())
+				return false;
+			// Credit points ??
+		}
+
+		while (!verifyPhone(&d))
+			printf("Invalid, Please try again!\n\n");
+
+		if (!TermsAndConditions())
+			return;
+
+		writeUserType(&d, type);
+	}
+}
+bool verifyName(Details* d)
+{
+	char string[100];
+	printf("Name --> ");
+	scanf(" %[^\n]s", string);
+
+	for (int i = 0; i < strlen(string); i++)
+		if (!((string[i] >= 'a' && string[i] <= 'z') || (string[i] >= 'A' && string[i] <= 'Z') || (string[i] == ' ')))
+		{
+			printf("Must contain only English characters!\n");
+			return false;
+		}
+
+	char* str = copyString(string);
+	d->name = str;
+
+	return true;
+}
+bool verifyPassword(Details* d)
+{
+	char* str;
+	int letters = 0, numbers = 0;
+
+	printf("Password --> ");
+	inputString(&str);
+	
+	if (strlen(str) < MIN_PASSWORD_LEN)
+		return false;
+
+	for (int i = 0; i < strlen(str); i++)
+	{
+		if (!(str[i] >= 'a' && str[i] <= 'z')) 
+		{
+			if (!(str[i] >= 'A' && str[i] <= 'Z')) 
+			{
+				if (!(str[i] >= '0' && str[i] <= '9'))
+					return false;
+				else numbers++;
+			}
+			else letters++;
+		}
+		else letters++;
+	}
+
+	if (!numbers)
+		printf("Password must contain at least one number\n");
+
+	if (!letters)
+		printf("Password must contain at least one letter\n");
+	
+	if (letters && numbers) 
+	{
+		d->password = str;
+		return true;
+	}
+	return false;
+}
+bool verifyId(Details* d, bool* flag)
+{
+	char* str;
+	
+	printf("ID --> ");
+	inputString(&str);
+
+	long idVal = strtol(str, NULL, 10);
+	int Digit1, Digit2, Digit3, Digit4, Digit5, Digit6, Digit7, Digit8, Digit9, Sum, Res;
+
+	if ((idVal <= 999999999) && (idVal >= 100000000)) 
+	{
+		Digit1 = (idVal % 1000000000) / 100000000;   
+		Digit2 = (idVal % 100000000) / 10000000;	 
+		Digit3 = (idVal % 10000000) / 1000000;      
+		Digit4 = (idVal % 1000000) / 100000;         
+		Digit5 = (idVal % 100000) / 10000;         
+		Digit6 = (idVal % 10000) / 1000;            
+		Digit7 = (idVal % 1000) / 100;              
+		Digit8 = (idVal % 100) / 10;                 
+		Digit9 = (idVal % 10);                      
+
+		Digit1 = Digit1 * 1;				
+		Digit2 = Digit2 * 2;				
+		Digit3 = Digit3 * 1;					
+		Digit4 = Digit4 * 2;					
+		Digit5 = Digit5 * 1;					
+		Digit6 = Digit6 * 2;					
+		Digit7 = Digit7 * 1;					
+		Digit8 = Digit8 * 2;					
+
+		Digit2 = ((Digit2 / 10) + (Digit2 % 10));	
+		Digit4 = ((Digit4 / 10) + (Digit4 % 10));	
+		Digit6 = ((Digit6 / 10) + (Digit6 % 10));	
+		Digit8 = ((Digit8 / 10) + (Digit8 % 10));	
+
+		Sum = Digit1 + Digit2 + Digit3 + Digit4 + Digit5 + Digit6 + Digit7 + Digit8;  
+
+		Res = 10 - (Sum % 10);
+
+		if (Res == Digit9) 
+		{
+			if (findUserType(str)) 
+			{
+				*flag = true;
+				return false;
+			}
+
+			d->ID = str;
+			return true;
+		}
+
+		else if (Res != Digit9)
+			return false;
+	}
+
+	else 
+		return false;
+}
+bool verifyAge()
+{
+	int age;
+
+	printf("Age --> ");
+	scanf_s("%d", &age);
+
+	if (age < LEGAL_AGE)
+	{
+		printf("We are sry, The minimum age is 16\n");
+		return false;
+	}
+	return true;
+}
+bool verifyPhone(Details* d)
+{
+	char* str;
+	
+	printf("Phone --> ");
+	inputString(&str);
+	if (str == NULL)
+		exit(1);
+
+	for (int i = 0; i < strlen(str); i++)
+	{
+		if (!(str[i] >= '0' && str[i] <= '9'))
+		{
+			printf("Phone number contain only Digits!\n");
+			return false;
+		}
+	}
+
+	if (strlen(str) != PHONE_NUM_LEN)
+	{
+		printf("Phone number must contain ten Digits!\n");
+		return false;
+	}
+
+	d->phone = str;
+	return true;
+}
+bool TermsAndConditions()
+{
+	char terms;
+	
+	printf("Do you agree to the terms and conditions (Y/N)\nInput --> ");
+	getchar();
+	scanf("%c", &terms);
+	
+	while (terms != 'Y' || terms != 'N')
+	{
+		if (terms == 'Y')
+			return true;
+		else if (terms == 'N')
+			return false;
+		else
+		{
+			printf("Invalid input, Try again\nInput --> ");
+			getchar();
+			scanf("%c", &terms);
+		}
+	}
+}
+UserType findUserType(char* id) 
+{
+	char* ID = readUser(PATH_CUSTOMERS, id, readId);
+
+	if (ID)
+		return customer;
+
+	ID = readUser(PATH_MANAGERS, id, readId);
+	if (ID)
+		return manager;
+
+	return none;
+}
+UserType loginUser() 
+{
+	char* id, *pass;
+
+	printf("ID --> ");
+	inputString(&id);
+
+	UserType type = findUserType(id);
+	if (!type) 
+	{
+		printf("ID doesnt exist\n");
+		return none;
+	}
+
+	printf("Password --> ");
+	inputString(&pass);
+
+	if (strcmp(readUser(type == customer ? PATH_CUSTOMERS : PATH_MANAGERS, id, readPassword), pass) == 0) 
+	{
+		printf("You've successfully logged in as a ");
+		if (type == customer)
+		{
+			printf("customer.\n");
+			return customer;
+		}
+
+		if (type == manager)
+		{
+			printf("manager.\n");
+			return manager;
+		}
+	}
+
+	else
+	{
+		printf("Invalid Password\n");
+		return none;
+	}
+}
+
+//Catalog declarations
+void addProduct();
+void printProduct(Product* product);
+bool doesProductExist(char* filename, char* _productName, char* _company);
+Product selectProduct();
+/*char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field);*/
+
+// Catalog definitions
+void addProduct()
+{
+	char* rProductName = NULL;
+	while (!rProductName)
+	{
+		printf("Product name --> ");
+		inputString(&rProductName);
+
+		for (int i = 0; i < strlen(rProductName); i++)
+		{
+			if (!(rProductName[i] >= 'a' && rProductName[i] <= 'z' || rProductName[i] >= 'A' && rProductName[i] <= 'Z'))
+			{
+				rProductName = NULL;
+				printf("Invalid product name\n");
+				break;
+			}
+		}
+	}
+	
+	char* rProductCompany = NULL;
+	while (!rProductCompany)
+	{
+		printf("Company product --> ");
+		inputString(&rProductCompany);
+
+		if (doesProductExist(PATH_CATALOG, rProductName, rProductCompany))
+		{
+			printf("Company product already in stock\n");
+			return;
+		}
+
+		for (int i = 0; i < strlen(rProductCompany); i++)
+		{
+			if (!(rProductCompany[i] >= 'a' && rProductCompany[i] <= 'z' || rProductCompany[i] >= 'A' && rProductCompany[i] <= 'Z'))
+			{
+				rProductCompany = NULL;
+				printf("Invlaid company product\n");
+				break;
+			}
+		}
+	}
+
+	char* rProductPrice = NULL;
+	while (!rProductPrice)
+	{
+		printf("Product price --> ");
+		inputString(&rProductPrice);
+
+		for (int i = 0; i < strlen(rProductPrice); i++)
+		{
+			if (strlen(rProductPrice) == 1 && rProductPrice[i] == '0')
+			{
+				rProductPrice = NULL;
+				printf("Invalid product price\n");
+				break;
+			}
+
+			if (!(rProductPrice[i] >= '0' && rProductPrice[i] <= '9') && rProductPrice[i] != '.')
+			{
+				rProductPrice = NULL;
+				printf("Invalid prudct price\n");
+				break;
+			}
+		}
+	}
+
+	char* rProductQuantity = NULL;
+	while (!rProductQuantity)
+	{
+		printf("Product quantity --> ");
+		inputString(&rProductQuantity);
+
+		for (int i = 0; i < strlen(rProductQuantity); i++)
+		{
+			if (!(rProductQuantity[i] >= '0' && rProductQuantity[i] <= '9'))
+			{
+				rProductQuantity = NULL;
+				printf("Invalid product quantity\n");
+				break;
+			}
+		}
+	}
+
+	char* rProductCategory = NULL;
+	while (!rProductCategory)
+	{
+		printf("Product category --> ");
+		inputString(&rProductCategory);
+
+		for (int i = 0; i < strlen(rProductCategory); i++)
+		{
+			if (!(rProductCategory[i] >= 'a' && rProductCategory[i] <= 'z' || rProductCategory[i] >= 'A' && rProductCategory[i] <= 'Z'))
+			{
+				rProductCategory = NULL;
+				printf("Invlaid input\n");
+				break;
+			}
+		}
+	}
+
+	char* output = copyString("");
+	appendStringComma(&output, rProductName);
+	appendStringComma(&output, rProductCompany);
+	appendStringComma(&output, rProductPrice);
+	appendStringComma(&output, rProductQuantity);
+	appendStringNewLine(&output, rProductCategory);
+	writeFile(PATH_CATALOG, output);
+	free(output);
+}
+void printProduct(Product* product)
+{
+	printf("Name %s\tCompany %s\tPrice %s\tQuantity %s\tCategory %s\n", product->name, product->company, product->price, product->quantity, product->category);
+}
+bool doesProductExist(char* filename, char* _productName, char* _company)
+{
+	char name[100], company[100], price[20], quantity[100], category[100];
+
+	FILE* file;
+	file = fopen(filename, "r");
+	if (!file) {
+		printf("Error\n");
+		return;
+	}
+
+	char buf[500];
+	while (fscanf(file, "%s", buf) == 1)
+	{
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
+
+		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
+			return true;
+	}
+	return false;
+}
+Product selectProduct() 
+{
+	Product product = { NULL, NULL, NULL, NULL, NULL };
+	char name[100], company[100], quantity[100], price[100], category[100];
+
+	FILE* file;
+	file = fopen(PATH_CATALOG, "r");
+	if (!file) 
+	{
+		printf("Error\n");
+		return;
+	}
+
+	char buf[500];
+	int i = 1;
+	
+	printf("\tNAME\t\tCOMPANY\t\tQUANTITY\t\tPRICE\t\tCATEGORY\n");
+	
+	while (fscanf(file, "%s", buf) == 1) 
+	{
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price, category);
+		printf("%d.\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\n", i, name, company, quantity, price, category);
+		i++;
+	}
+
+	printf("Select product --> ");
+
+	int res;
+	scanf("%d", &res);
+
+	// retrieve the selected product
+	int j = 1;
+	file = fopen(PATH_CATALOG, "r");
+	while (fscanf(file, "%s", buf) == 1 && j <= i) 
+	{
+		if (j != res) 
+		{
+			sscanf(buf, "%*s,*s,%*s,%*s,%*s");
+			j++;
+		}
+		
+		else 
+		{
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price, category);
+			product.name = copyString(name);
+			product.company = copyString(company);
+			product.quantity = copyString(quantity);
+			product.price = copyString(price);
+			product.category = copyString(category);
+			return product;
+		}
+	}
+	return product;
+}
+/*char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field) {
+	char name[100], company[100], price[20], quantity[100], category[100];
+
+	FILE* file;
+	file = fopen(filename, "r");
+	if (!file) {
+		printStrLine("Error.");
+		return;
+	}
+
+	char buf[500];
+	while (fscanf(file, "%s", buf) == 1)
+	{
+		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
+
+		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
+		{
+			if (field == productName) return name;
+			if (field == productCompany) return company;
+			if (field == productPrice) return price;
+			if (field == productQuantity) return quantity;
+			if (field == productCategory) return category;
+		}
+	}
+	return NULL;
+}*/
+
+
+//Menu's declartions
+void welcomeScreen();
+void customerMenu();
+void managerMenu();
+
+//Menu's definitions
+void welcomeScreen()
+{
+	int loop = 1, regLog = 1, regType = 1, managerCode;
+
+	printf("Welcome to \"Market for you\"\n'1' Register\n'2' Log in\n'3' Exit\nInput --> ");
+	scanf_s("%d", &regLog);
+
+	while (loop)
+	{
+		switch (regLog)
+		{
+		case 1:
+			printf("\nSign up as\n'1' Customer\n'2' Manager\n'3' Exit\nInput --> ");
+			scanf_s("%d", &regType);
+
+			switch (regType)
+			{
+			case 1:
+				registerUserType(customer);
+				break;
+
+			case 2:
+				printf("Input manager code --> ");
+				scanf_s("%d", &managerCode);
+
+				if (MANAGER_CODE == managerCode)
+					registerUserType(manager);
+
+				else
+					printf("Wrong Code\n");
+				
+				break;
+
+			case 3:
+				break;
+
+			default:
+				printf("Error input, Try again!\n\nInput --> ");
+				scanf_s("%d", &regType);
+				break;
+
+			}
+			break;
+
+		case 2:
+			if (loginUser() == customer)
+				customerMenu();
+
+			else if (loginUser() == manager)
+				managerMenu();
+
+			else
+				printf("Failed login\n");
+			break;
+
+		case 3:
+			loop = 0;
+			break;
+
+		default:
+			printf("Invalid input, Try again!\n\nInput --> ");
+			scanf_s("%d", &regLog);
+			break;
+
+		}
+	}
+}
+void customerMenu()
+{
+	return;
+}
+void managerMenu()
+{
+	return;
+}
+
+int main()
+{
+	checkFolder();
+	checkFiles();
+	welcomeScreen();
+
+	return 0;
+}
