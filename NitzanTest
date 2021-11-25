@@ -5,6 +5,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+//Global Variable
+char* Identity;
+
 // CONSTS
 #define LEGAL_AGE 16
 #define MANAGER_CODE 1111
@@ -12,11 +15,12 @@
 #define MIN_PASSWORD_LEN 6
 
 // FILES
-#define PATH_CUSTOMERS "data\\users\\customers.csv"
-#define PATH_MANAGERS "data\\users\\managers.csv"
-#define PATH_CATALOG "data\\catalog.csv"
-#define PATH_ORDERS_CONFIMRED "data\\orders\\unconfirmed\\"
-#define PATH_ORDERS_UNCONFIRMED "data\\orders\\confirmed\\"
+#define FILE_TEMP "data\\users\\temp.csv"
+#define FILE_CUSTOMERS "data\\users\\customers.csv"
+#define FILE_MANAGERS "data\\users\\managers.csv"
+#define FILE_CATALOG "data\\catalog.csv"
+#define FILE_ORDERS_CONFIMRED "data\\orders\\unconfirmed\\"
+#define FILE_ORDERS_UNCONFIRMED "data\\orders\\confirmed\\"
 
 // FOLDERS
 #define FOLDER_DATA "data"
@@ -27,7 +31,7 @@
 
 // Definitions
 typedef enum { false, true } bool;
-typedef enum { readId, readPassword, readName, readPhone } FieldUser;
+typedef enum { readId, readPassword, readName, readPhone, readSupermarketPoints} FieldUser;
 typedef enum { productName, productCompany, productPrice, productQuantity, productCategory } FieldProduct;
 typedef enum { none, customer, manager } UserType;
 
@@ -40,16 +44,16 @@ typedef struct Details
 	char* phone;
 }Details;
 
-typedef struct Product 
+typedef struct Product
 {
 	char* name;
 	char* company;
-	char* quantity;
-	char* price;
 	char* category;
+	int quantity;
+	float price;
 } Product;
 
-/*typedef struct Order
+typedef struct Order
 {
 	Product* products;
 	char* customerId;
@@ -59,40 +63,87 @@ typedef struct Product
 
 typedef struct Date {
 	int day, month, year;
-} Date;*/
+} Date;
 
 //String functions declarations
-void inputString(char* _str);
-void appendString(char** _str1, char* _str2);
-void appendStringComma(char** _str1, char* _str2);
-void appendStringNewLine(char** _str1, char* _str2);
-char* copyString(char* _str);
+void inputString(char* _str); //Finish
+void appendString(char** _str1, char* _str2); //Finish
+void appendStringComma(char** _str1, char* _str2); //Finish
+void appendStringNewLine(char** _str1, char* _str2); //Finish
+char* copyString(char* _str); //Finish
+
+//File declarations
+void checkFiles(); //Finish
+void checkFolder(); //Finish
+void createFolder(char* dirname); //Finish
+void writeFile(char* filename, char* content); //Finish
+void writeUserType(Details* d, UserType type); //Finish
+char* readUser(char* filename, char* id, FieldUser field); // Name & CreaditPoints not Fully work
+bool doesFileExists(char* filename); //Finish
+
+
+// Authentication functions declarations
+void registerUserType(UserType type); //Works (Possible to change the CreaditPoints)
+bool verifyName(Details* d); //Finish
+bool verifyPassword(Details* d); //Finish
+bool verifyId(Details* d, bool* flag); //Finish
+bool verifyAge(); //Finish
+bool verifyPhone(Details* d); //Finish
+bool TermsAndConditions(); //Finish
+UserType findUserType(char* id); //Finish
+UserType loginUser(); //Finish
+
+bool checkPassword(char* pass); //Find Better Solution
+bool checkPhone(char* phone); //Find Better Solution
+
+//Catalog declarations 
+void addProduct(); //Finish ??
+Product selectProduct(); //Finish ??
+
+void printProduct(Product* product); //Unknown
+bool doesProductExist(char* filename, char* _productName, char* _company); //Unknown
+
+
+//Menu's declartions
+void welcomeScreen(); //Finish
+void customerMenu(); //More Function Needed
+void managerMenu(); //More Functions Needed
+
+//Profile
+void profile(); //Works, Might needed more actions
+void printProfile(); //Finish
+void updateProfileUser(char* id); //Works , Deffently can be improved
+
+//Switches
+void registerStage(); //Finish
+void store(); //Need More Functions
+
 
 // String functions definitions
-void inputString(char** _str) 
+void inputString(char** _str)
 {
 	char str[100];
-	
+
 	scanf_s("%s", str, 100);
 	*_str = malloc(strlen(str) * sizeof(char) + sizeof(char));
 	strcpy(*_str, str);
 }
-void appendString(char** _str1, char* _str2) 
+void appendString(char** _str1, char* _str2)
 {
 	char* str = malloc((strlen(*_str1) + strlen(_str2)) * sizeof(char) + sizeof(char));
 	if (str == NULL) exit(1);
-	
+
 	strcpy(str, *_str1);
 	strcat(str, _str2);
 	free(*_str1);
 	*_str1 = str;
 }
-void appendStringComma(char** _str1, char* _str2) 
+void appendStringComma(char** _str1, char* _str2)
 {
 	appendString(_str1, _str2);
 	appendString(_str1, ",");
 }
-void appendStringNewLine(char** _str1, char* _str2) 
+void appendStringNewLine(char** _str1, char* _str2)
 {
 	appendString(_str1, _str2);
 	appendString(_str1, "\n");
@@ -107,26 +158,18 @@ char* copyString(char* _str)
 	return str;
 }
 
-//File declarations
-//void readFile(char* filename);
-void checkFiles();
-void checkFolder();
-void createFolder(char* dirname);
-void writeFile(char* filename, char* content);
-void writeUserType(Details* d, UserType type);
-char* readUser(char* filename, FieldUser field);
-bool doesFileExists(char* filename);
-FILE* openFile(char* filename, char* access, char* skipFormat);
 
 // Files functions definitions
 void checkFiles() //Create the defualts files.
 {
-	if (!doesFileExists(PATH_CUSTOMERS))
-		writeFile(PATH_CUSTOMERS, "Username,Identity,Password,Points,Phone\n");
-	if (!doesFileExists(PATH_MANAGERS))
-		writeFile(PATH_MANAGERS, "Username,Identity,Password,Phone\n");
-	if (!doesFileExists(PATH_CATALOG))
-		writeFile(PATH_CATALOG, "Name,Company,Price,Quantity,Category\n");
+	if (!doesFileExists(FILE_CUSTOMERS))
+		writeFile(FILE_CUSTOMERS, "Username,Identity,Password,Phone,Points\n");
+
+	if (!doesFileExists(FILE_MANAGERS))
+		writeFile(FILE_MANAGERS, "Username,Identity,Password,Phone\n");
+
+	if (!doesFileExists(FILE_CATALOG))
+		writeFile(FILE_CATALOG, "Name,Company,Price,Quantity,Category\n");
 }
 void checkFolder() //Create the defualts folders.
 {
@@ -155,82 +198,73 @@ void createFolder(char* dirname)
 		exit(1);
 	}
 }
-void writeFile(char* filename, char* content) 
+void writeFile(char* filename, char* content)
 {
 	FILE* file;
-	file = openFile(filename, "ab+", NULL);
-	if (!file) 
+	file = fopen(filename, "ab+");
+	if (!file)
 	{
-		printf("Error.\n");
+		printf("Error1.\n");
 		return;
 	}
 	fprintf(file, "%s", content);
 	fclose(file);
 }
 void writeUserType(Details* d, UserType type)
-{
+{	
 	char* output = copyString("");
 	appendStringComma(&output, d->name);
 	appendStringComma(&output, d->ID);
 	appendStringComma(&output, d->password);
 	if (type == customer)
-		appendStringComma(&output, "0.0");
-	appendStringNewLine(&output, d->phone);
-	type == customer ? writeFile(PATH_CUSTOMERS, output) : writeFile(PATH_MANAGERS, output);
+	{
+		appendStringComma(&output, d->phone);
+		appendStringNewLine(&output, "0.0");
+	}
+	
+	else
+		appendStringNewLine(&output, d->phone);
+	type == customer ? writeFile(FILE_CUSTOMERS, output) : writeFile(FILE_MANAGERS, output);
 	free(output);
 }
-char* readUser(char* filename, char* id, FieldUser field) 
+char* readUser(char* filename, char* id, FieldUser field)
 {
-	char nameString[100], ID[20], password[100], phoneString[20];
+	char nameString[100], ID[20], password[100], phoneString[20], supermarketPoints[20];
+	
 	FILE* file;
 	file = fopen(filename, "r");
-	if (!file) {
-		printf("Error.\n");
+	if (!file) 
+	{
+		printf("Error2.\n");
 		return;
 	}
 
 	char buf[500];
-	while (fscanf(file, "%s", buf) == 1) 
+	while (fscanf(file, "%s", buf) == 1)
 	{
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, nameString, phoneString);
-		if (strcmp(ID, id) == 0) {
-			if (field == readName) return nameString;
-			if (field == readId) return ID;
-			if (field == readPassword) return password;
-			if (field == readPhone) return phoneString;
-		}
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, phoneString, supermarketPoints);
+			if (strcmp(ID, id) == 0)
+			{
+				if (field == readName) return nameString;
+				if (field == readId) return ID;
+				if (field == readPassword) return password;
+				if (findUserType(id) == customer)
+					if (field == readSupermarketPoints)
+						return supermarketPoints;
+				if (field == readPhone) return phoneString;
+			}
+	
+		
 	}
+	
 	return NULL;
 }
-bool doesFileExists(char* filename) 
+bool doesFileExists(char* filename)
 {
 	struct stat buffer;
 	return !stat(filename, &buffer);
 }
-FILE* openFile(char* filename, char* access, char* skipFormat) 
-{
-	FILE* file;
-	file = fopen(filename, access);
-	if (!file)
-	{
-		printf("Error.\n");
-		return;
-	}
-	if (skipFormat)
-		fprintf(file, skipFormat);
-	return file;
-}
 
-// Authentication functions declarations
-void registerUserType(UserType type);
-bool verifyName(Details* d);
-bool verifyPassword(Details* d);
-bool verifyId(Details* d, bool* flag);
-bool verifyAge();
-bool verifyPhone(Details* d);
-bool TermsAndConditions();
-UserType findUserType(char* id);
-UserType loginUser();
 
 // Authentication functions definitions
 void registerUserType(UserType type)
@@ -313,15 +347,15 @@ bool verifyPassword(Details* d)
 
 	printf("Password --> ");
 	inputString(&str);
-	
+
 	if (strlen(str) < MIN_PASSWORD_LEN)
 		return false;
 
 	for (int i = 0; i < strlen(str); i++)
 	{
-		if (!(str[i] >= 'a' && str[i] <= 'z')) 
+		if (!(str[i] >= 'a' && str[i] <= 'z'))
 		{
-			if (!(str[i] >= 'A' && str[i] <= 'Z')) 
+			if (!(str[i] >= 'A' && str[i] <= 'Z'))
 			{
 				if (!(str[i] >= '0' && str[i] <= '9'))
 					return false;
@@ -337,8 +371,8 @@ bool verifyPassword(Details* d)
 
 	if (!letters)
 		printf("Password must contain at least one letter\n");
-	
-	if (letters && numbers) 
+
+	if (letters && numbers)
 	{
 		d->password = str;
 		return true;
@@ -348,46 +382,46 @@ bool verifyPassword(Details* d)
 bool verifyId(Details* d, bool* flag)
 {
 	char* str;
-	
+
 	printf("ID --> ");
 	inputString(&str);
 
 	long idVal = strtol(str, NULL, 10);
 	int Digit1, Digit2, Digit3, Digit4, Digit5, Digit6, Digit7, Digit8, Digit9, Sum, Res;
 
-	if ((idVal <= 999999999) && (idVal >= 100000000)) 
+	if ((idVal <= 999999999) && (idVal >= 100000000))
 	{
-		Digit1 = (idVal % 1000000000) / 100000000;   
-		Digit2 = (idVal % 100000000) / 10000000;	 
-		Digit3 = (idVal % 10000000) / 1000000;      
-		Digit4 = (idVal % 1000000) / 100000;         
-		Digit5 = (idVal % 100000) / 10000;         
-		Digit6 = (idVal % 10000) / 1000;            
-		Digit7 = (idVal % 1000) / 100;              
-		Digit8 = (idVal % 100) / 10;                 
-		Digit9 = (idVal % 10);                      
+		Digit1 = (idVal % 1000000000) / 100000000;
+		Digit2 = (idVal % 100000000) / 10000000;
+		Digit3 = (idVal % 10000000) / 1000000;
+		Digit4 = (idVal % 1000000) / 100000;
+		Digit5 = (idVal % 100000) / 10000;
+		Digit6 = (idVal % 10000) / 1000;
+		Digit7 = (idVal % 1000) / 100;
+		Digit8 = (idVal % 100) / 10;
+		Digit9 = (idVal % 10);
 
-		Digit1 = Digit1 * 1;				
-		Digit2 = Digit2 * 2;				
-		Digit3 = Digit3 * 1;					
-		Digit4 = Digit4 * 2;					
-		Digit5 = Digit5 * 1;					
-		Digit6 = Digit6 * 2;					
-		Digit7 = Digit7 * 1;					
-		Digit8 = Digit8 * 2;					
+		Digit1 = Digit1 * 1;
+		Digit2 = Digit2 * 2;
+		Digit3 = Digit3 * 1;
+		Digit4 = Digit4 * 2;
+		Digit5 = Digit5 * 1;
+		Digit6 = Digit6 * 2;
+		Digit7 = Digit7 * 1;
+		Digit8 = Digit8 * 2;
 
-		Digit2 = ((Digit2 / 10) + (Digit2 % 10));	
-		Digit4 = ((Digit4 / 10) + (Digit4 % 10));	
-		Digit6 = ((Digit6 / 10) + (Digit6 % 10));	
-		Digit8 = ((Digit8 / 10) + (Digit8 % 10));	
+		Digit2 = ((Digit2 / 10) + (Digit2 % 10));
+		Digit4 = ((Digit4 / 10) + (Digit4 % 10));
+		Digit6 = ((Digit6 / 10) + (Digit6 % 10));
+		Digit8 = ((Digit8 / 10) + (Digit8 % 10));
 
-		Sum = Digit1 + Digit2 + Digit3 + Digit4 + Digit5 + Digit6 + Digit7 + Digit8;  
+		Sum = Digit1 + Digit2 + Digit3 + Digit4 + Digit5 + Digit6 + Digit7 + Digit8;
 
 		Res = 10 - (Sum % 10);
 
-		if (Res == Digit9) 
+		if (Res == Digit9)
 		{
-			if (findUserType(str)) 
+			if (findUserType(str))
 			{
 				*flag = true;
 				return false;
@@ -401,7 +435,7 @@ bool verifyId(Details* d, bool* flag)
 			return false;
 	}
 
-	else 
+	else
 		return false;
 }
 bool verifyAge()
@@ -421,7 +455,7 @@ bool verifyAge()
 bool verifyPhone(Details* d)
 {
 	char* str;
-	
+
 	printf("Phone --> ");
 	inputString(&str);
 	if (str == NULL)
@@ -448,11 +482,11 @@ bool verifyPhone(Details* d)
 bool TermsAndConditions()
 {
 	char terms;
-	
+
 	printf("Do you agree to the terms and conditions (Y/N)\nInput --> ");
 	getchar();
 	scanf("%c", &terms);
-	
+
 	while (terms != 'Y' || terms != 'N')
 	{
 		if (terms == 'Y')
@@ -467,20 +501,20 @@ bool TermsAndConditions()
 		}
 	}
 }
-UserType findUserType(char* id) 
+UserType findUserType(char* id)
 {
-	char* ID = readUser(PATH_CUSTOMERS, id, readId);
+	char* ID = readUser(FILE_CUSTOMERS, id, readId);
 
 	if (ID)
 		return customer;
 
-	ID = readUser(PATH_MANAGERS, id, readId);
+	ID = readUser(FILE_MANAGERS, id, readId);
 	if (ID)
 		return manager;
 
 	return none;
 }
-UserType loginUser() 
+UserType loginUser()
 {
 	char* id, *pass;
 
@@ -488,7 +522,7 @@ UserType loginUser()
 	inputString(&id);
 
 	UserType type = findUserType(id);
-	if (!type) 
+	if (!type)
 	{
 		printf("ID doesnt exist\n");
 		return none;
@@ -497,18 +531,22 @@ UserType loginUser()
 	printf("Password --> ");
 	inputString(&pass);
 
-	if (strcmp(readUser(type == customer ? PATH_CUSTOMERS : PATH_MANAGERS, id, readPassword), pass) == 0) 
+	if (strcmp(readUser(type == customer ? FILE_CUSTOMERS : FILE_MANAGERS, id, readPassword), pass) == 0)
 	{
 		printf("You've successfully logged in as a ");
 		if (type == customer)
 		{
 			printf("customer.\n");
+			Identity = id;
+			customerMenu();
 			return customer;
 		}
 
 		if (type == manager)
 		{
 			printf("manager.\n");
+			Identity = id;
+			managerMenu();
 			return manager;
 		}
 	}
@@ -519,16 +557,76 @@ UserType loginUser()
 		return none;
 	}
 }
+bool checkPassword(char* pass) //Temp
+{
+	char* str;
+	int letters = 0, numbers = 0;
 
-//Catalog declarations
-void addProduct();
-void printProduct(Product* product);
-bool doesProductExist(char* filename, char* _productName, char* _company);
-Product selectProduct();
-/*char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field);*/
+	printf("Password --> ");
+	inputString(&str);
+
+	if (strlen(str) < MIN_PASSWORD_LEN)
+		return false;
+
+	for (int i = 0; i < strlen(str); i++)
+	{
+		if (!(str[i] >= 'a' && str[i] <= 'z'))
+		{
+			if (!(str[i] >= 'A' && str[i] <= 'Z'))
+			{
+				if (!(str[i] >= '0' && str[i] <= '9'))
+					return false;
+				else numbers++;
+			}
+			else letters++;
+		}
+		else letters++;
+	}
+
+	if (!numbers)
+		printf("Password must contain at least one number\n");
+
+	if (!letters)
+		printf("Password must contain at least one letter\n");
+
+	if (letters && numbers)
+	{
+		pass = str;
+		return true;
+	}
+	return false;
+}
+bool checkPhone(char* phone)
+{
+	char* str;
+
+	printf("Phone --> ");
+	inputString(&str);
+	if (str == NULL)
+		exit(1);
+
+	for (int i = 0; i < strlen(str); i++)
+	{
+		if (!(str[i] >= '0' && str[i] <= '9'))
+		{
+			printf("Phone number contain only Digits!\n");
+			return false;
+		}
+	}
+
+	if (strlen(str) != PHONE_NUM_LEN)
+	{
+		printf("Phone number must contain ten Digits!\n");
+		return false;
+	}
+
+	phone = str;
+	return true;
+}
+
 
 // Catalog definitions
-void addProduct()
+void addProduct() 
 {
 	char* rProductName = NULL;
 	while (!rProductName)
@@ -546,14 +644,14 @@ void addProduct()
 			}
 		}
 	}
-	
+
 	char* rProductCompany = NULL;
 	while (!rProductCompany)
 	{
 		printf("Company product --> ");
 		inputString(&rProductCompany);
 
-		if (doesProductExist(PATH_CATALOG, rProductName, rProductCompany))
+		if (doesProductExist(FILE_CATALOG, rProductName, rProductCompany))
 		{
 			printf("Company product already in stock\n");
 			return;
@@ -570,45 +668,22 @@ void addProduct()
 		}
 	}
 
-	char* rProductPrice = NULL;
-	while (!rProductPrice)
+	float rProductPrice = -1;
+	while (rProductPrice < 0)
 	{
 		printf("Product price --> ");
-		inputString(&rProductPrice);
-
-		for (int i = 0; i < strlen(rProductPrice); i++)
-		{
-			if (strlen(rProductPrice) == 1 && rProductPrice[i] == '0')
-			{
-				rProductPrice = NULL;
-				printf("Invalid product price\n");
-				break;
-			}
-
-			if (!(rProductPrice[i] >= '0' && rProductPrice[i] <= '9') && rProductPrice[i] != '.')
-			{
-				rProductPrice = NULL;
-				printf("Invalid prudct price\n");
-				break;
-			}
-		}
+		scanf("%f", &rProductPrice);
+		if (rProductPrice < 0)
+			printf("Price must be positive, please try again.\n");
 	}
 
-	char* rProductQuantity = NULL;
-	while (!rProductQuantity)
+	int rProductQuantity = -1;
+	while (rProductQuantity < 0)
 	{
 		printf("Product quantity --> ");
-		inputString(&rProductQuantity);
-
-		for (int i = 0; i < strlen(rProductQuantity); i++)
-		{
-			if (!(rProductQuantity[i] >= '0' && rProductQuantity[i] <= '9'))
-			{
-				rProductQuantity = NULL;
-				printf("Invalid product quantity\n");
-				break;
-			}
-		}
+		scanf("%d", &rProductQuantity);
+		if (rProductQuantity < 0)
+			printf("Quantity must be positive, please try again.\n");
 	}
 
 	char* rProductCategory = NULL;
@@ -627,15 +702,116 @@ void addProduct()
 			}
 		}
 	}
-
-	char* output = copyString("");
-	appendStringComma(&output, rProductName);
-	appendStringComma(&output, rProductCompany);
-	appendStringComma(&output, rProductPrice);
-	appendStringComma(&output, rProductQuantity);
-	appendStringNewLine(&output, rProductCategory);
-	writeFile(PATH_CATALOG, output);
+	char output[200];
+	sprintf(output, "%s,%s,%s,%f,%d,\n", rProductName, rProductCompany, rProductCategory, rProductPrice, rProductQuantity);
+	writeFile(FILE_CATALOG, output);
 	free(output);
+}
+Product selectProduct()
+{
+	Product product = { NULL, NULL, NULL, 0, 0 };
+	char name[100], company[100], category[100];
+	int quantity = -1;
+	float price = -1;
+
+	FILE* file = fopen(FILE_CATALOG, "r");
+	if (!file)
+	{
+		printf("Error\n");
+		exit(1);
+	}
+
+	printf("\tNAME\t\t\tCOMPANY\t\t\tCATEGORY\t\tPRICE\t\t\tQUANTITY\n");
+
+	int i = 1;
+	char buffer[500];
+
+	while (fscanf(file, "%s", buffer) == 1)
+	{
+		sscanf(buffer, "%[^,],%[^,],%[^,],%f,%d", name, company, category, &price, &quantity);
+		printf("%d.\t%s\t\t\t%s\t\t\t%s\t\t\t%.2f\t\t\t%d\n", i, name, company, category, price, quantity);
+		i++;
+	}
+
+	printf("Enter 0 to sort the products by ascending price\n");
+	printf("Or select a product --> ");
+
+	int res;
+	scanf("%d", &res);
+
+	if (res == 0)
+	{
+		int ite = 0;
+		typedef struct Temp
+		{
+			float val;
+			int index;
+		} Temp;
+
+		Product* products = malloc(sizeof(Product) * i);
+		Temp* tempArray = malloc(sizeof(Temp) * i);
+
+		file = fopen(FILE_CATALOG, "r");
+		while (fscanf(file, "%s", buffer) == 1)
+		{
+			sscanf(buffer, "%[^,],%[^,],%[^,],%f,%d", name, company, category, &price, &quantity);
+			Product tempProduct = { copyString(name), copyString(company), copyString(category), quantity, price };
+			Temp temp = { price, ite };
+			products[ite] = tempProduct;
+			tempArray[ite] = temp;
+			ite++;
+		}
+
+		for (int p = 0; p < ite; p++)
+		{
+			for (int j = p + 1; j < ite; j++)
+			{
+				if (tempArray[p].val > tempArray[j].val)
+				{
+					Temp anotherTemp = { tempArray[p].val, tempArray[p].index };
+					tempArray[p] = tempArray[j];
+					tempArray[j] = anotherTemp;
+				}
+			}
+		}
+
+		for (int p = 0; p < ite; p++)
+		{
+			printf("%d.\t%s\t\t\t%s\t\t\t%s\t\t\t%.2f\t\t\t%d\t\n",
+				p + 1,
+				products[tempArray[p].index].name,
+				products[tempArray[p].index].company,
+				products[tempArray[p].index].category,
+				products[tempArray[p].index].price,
+				products[tempArray[p].index].quantity);
+		}
+
+		printf("Select product --> ");
+		scanf("%d", &res);
+		return products[tempArray[res - 1].index];
+	}
+
+	else
+	{
+		int j = 1;
+		file = fopen(FILE_CATALOG, "r");
+		while (fscanf(file, "%s", buffer) == 1 && j <= i)
+		{
+			if (j != res)
+			{
+				sscanf(buffer, "%*s,*s,%*s,%*s,%*s");
+				j++;
+			}
+
+			else
+			{
+				sscanf(buffer, "%[^,],%[^,],%[^,],%f,%d", name, company, category, &price, &quantity);
+				Product tempProduct = { copyString(name), copyString(company), copyString(category), quantity, price };
+				return tempProduct;
+			}
+		}
+	}
+	return product;
 }
 void printProduct(Product* product)
 {
@@ -662,175 +838,307 @@ bool doesProductExist(char* filename, char* _productName, char* _company)
 	}
 	return false;
 }
-Product selectProduct() 
-{
-	Product product = { NULL, NULL, NULL, NULL, NULL };
-	char name[100], company[100], quantity[100], price[100], category[100];
 
-	FILE* file;
-	file = fopen(PATH_CATALOG, "r");
-	if (!file) 
-	{
-		printf("Error\n");
-		return;
-	}
-
-	char buf[500];
-	int i = 1;
-	
-	printf("\tNAME\t\tCOMPANY\t\tQUANTITY\t\tPRICE\t\tCATEGORY\n");
-	
-	while (fscanf(file, "%s", buf) == 1) 
-	{
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price, category);
-		printf("%d.\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\n", i, name, company, quantity, price, category);
-		i++;
-	}
-
-	printf("Select product --> ");
-
-	int res;
-	scanf("%d", &res);
-
-	// retrieve the selected product
-	int j = 1;
-	file = fopen(PATH_CATALOG, "r");
-	while (fscanf(file, "%s", buf) == 1 && j <= i) 
-	{
-		if (j != res) 
-		{
-			sscanf(buf, "%*s,*s,%*s,%*s,%*s");
-			j++;
-		}
-		
-		else 
-		{
-			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, quantity, price, category);
-			product.name = copyString(name);
-			product.company = copyString(company);
-			product.quantity = copyString(quantity);
-			product.price = copyString(price);
-			product.category = copyString(category);
-			return product;
-		}
-	}
-	return product;
-}
-/*char* readProduct(char* filename, char* _productName, char* _company, FieldProduct field) {
-	char name[100], company[100], price[20], quantity[100], category[100];
-
-	FILE* file;
-	file = fopen(filename, "r");
-	if (!file) {
-		printStrLine("Error.");
-		return;
-	}
-
-	char buf[500];
-	while (fscanf(file, "%s", buf) == 1)
-	{
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", name, company, price, quantity, category);
-
-		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0)
-		{
-			if (field == productName) return name;
-			if (field == productCompany) return company;
-			if (field == productPrice) return price;
-			if (field == productQuantity) return quantity;
-			if (field == productCategory) return category;
-		}
-	}
-	return NULL;
-}*/
-
-
-//Menu's declartions
-void welcomeScreen();
-void customerMenu();
-void managerMenu();
-
-//Menu's definitions
+//Customer menu's
 void welcomeScreen()
 {
-	int loop = 1, regLog = 1, regType = 1, managerCode;
+	int interface;
 
-	printf("Welcome to \"Market for you\"\n'1' Register\n'2' Log in\n'3' Exit\nInput --> ");
-	scanf_s("%d", &regLog);
+	printf("'1' Register\t'2' Log in\t'3' Exit\nInput --> ");
+	scanf_s("%d", &interface);
 
-	while (loop)
+	switch (interface)
 	{
-		switch (regLog)
-		{
-		case 1:
-			printf("\nSign up as\n'1' Customer\n'2' Manager\n'3' Exit\nInput --> ");
-			scanf_s("%d", &regType);
+	case 1:
+		registerStage();
+		break;
 
-			switch (regType)
-			{
-			case 1:
-				registerUserType(customer);
-				break;
+	case 2:
+		if (loginUser() == none)
+			printf("Failed login\n");
+		break;
 
-			case 2:
-				printf("Input manager code --> ");
-				scanf_s("%d", &managerCode);
-
-				if (MANAGER_CODE == managerCode)
-					registerUserType(manager);
-
-				else
-					printf("Wrong Code\n");
-				
-				break;
-
-			case 3:
-				break;
-
-			default:
-				printf("Error input, Try again!\n\nInput --> ");
-				scanf_s("%d", &regType);
-				break;
-
-			}
-			break;
-
-		case 2:
-			if (loginUser() == customer)
-				customerMenu();
-
-			else if (loginUser() == manager)
-				managerMenu();
-
-			else
-				printf("Failed login\n");
-			break;
-
-		case 3:
-			loop = 0;
-			break;
-
-		default:
-			printf("Invalid input, Try again!\n\nInput --> ");
-			scanf_s("%d", &regLog);
-			break;
-
-		}
+	case 3:
+		break;
 	}
 }
 void customerMenu()
 {
-	return;
+	while (true)
+	{
+		int interface = 1;
+		printf("\n'1' Store\t'2' Profile\t'3' Submit ticket\t'4' Exit\nInput --> ");
+		scanf_s("%d", &interface);
+
+		switch (interface)
+		{
+		case 1:
+			store();
+			break;
+
+		case 2:
+			profile();
+			break;
+
+		case 3:
+			//Submit Ticket
+			break;
+
+		case 4:
+			return false;
+			break;
+		}
+	}
 }
 void managerMenu()
 {
-	return;
+	while (true)
+	{
+		int interface = 1;
+		printf("\n'1' Store\t'2' Profile\t'3' Submit ticket\t'4' Exit\nInput --> ");
+		scanf_s("%d", &interface);
+
+		switch (interface)
+		{
+		case 1:
+			//store();
+			break;
+
+		case 2:
+			profile();
+			break;
+
+		case 3:
+			//Submit ticket
+			break;
+
+		case 4:
+			return false;
+			break;
+		}
+	}
 }
+void registerStage()
+{
+	int interface, managerCode;
+
+	printf("\nSign up as:\n'1' Customer\t'2' Manager\t'3' Exit\nInput --> ");
+	scanf_s("%d", &interface);
+
+	switch (interface)
+	{
+	case 1:
+		registerUserType(customer);
+		break;
+
+	case 2:
+		printf("Input manager code --> ");
+		scanf_s("%d", &managerCode);
+
+		if (MANAGER_CODE == managerCode)
+			registerUserType(manager);
+		else
+			printf("Wrong Code\n");
+		break;
+
+	case 3:
+		break;
+	}
+}
+void profile()
+{
+	int interface;
+	
+	printf("\n'1' Print profile\t'2' Update profile\t'3' Exit\nInput --> ");
+	scanf_s("%d", &interface);
+	
+	switch (interface)
+	{
+	case 1:
+		printProfile();
+		break;
+
+	case 2:
+		updateProfileUser(Identity);
+		break;
+	
+	case 3:
+		break;
+	}
+}
+void updateProfileUser(char* id)
+{
+	char nameString[100], ID[20], password[100], phoneString[20], supermarketPoints[20], buf[500];
+	int interface;
+
+	FILE* f_temp = fopen(FILE_TEMP, "ab+");
+	if (!f_temp)
+	{
+		printf("can't open f_temp file\n");
+		exit(1);
+	}
+
+	FILE* user = fopen(findUserType(id) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, "r");
+	if (!user)
+	{
+		printf("can't open user file\n");
+		exit(1);
+	}
+
+	while (true)
+	{
+		printf("\n'1' Update Password\t2. Update Phone\nInput --> ");
+		scanf_s("%d", &interface);
+		if (interface != 1 && interface != 2)
+			printf("Invalid, Try again\ninput --> ");
+
+		else
+			break;
+	}
+
+	if (findUserType == customer)
+	{
+		while (fscanf(user, "%s", buf) == 1) //until the end of file
+		{
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, phoneString, supermarketPoints);
+			if (strcmp(id, ID) == 0)  //found the customer
+			{
+				if (interface == 1)
+				{
+					char* pass;
+					while (true)
+					{
+						if (checkPassword(&pass))
+							break;
+					}
+					fprintf(f_temp, "%s,%s,%s,%s,%s\n", nameString, ID, password, phoneString, supermarketPoints);
+				}
+
+				else if (interface == 2) //change phone number
+				{
+					char* phone;
+					while (true)
+					{
+						if (checkPhone(&phone))
+							break;
+					}
+					fprintf(f_temp, "%s,%s,%s,%s,%s\n", nameString, ID, password, phoneString, supermarketPoints);
+				}
+
+			}
+
+			else
+				fprintf(f_temp, "%s,%s,%s,%s,%s\n", nameString, ID, password, phoneString, supermarketPoints);
+		}
+	}
+	
+	else
+	{
+		while (fscanf(user, "%s", buf) == 1) //until the end of file
+		{
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, phoneString);
+			if (strcmp(id, ID) == 0)  //found the customer
+			{
+				if (interface == 1)
+				{
+					char* pass;
+					while (true)
+					{
+						if (checkPassword(&pass))
+							break;
+					}
+					fprintf(f_temp, "%s,%s,%s,%s\n", nameString, ID, password, phoneString);
+				}
+
+				else if (interface == 2) //change phone number
+				{
+					char* phone;
+					while (true)
+					{
+						if (checkPhone(&phone))
+							break;
+					}
+					fprintf(f_temp, "%s,%s,%s,%s\n", nameString, ID, password, phoneString);
+				}
+
+			}
+
+			else
+				fprintf(f_temp, "%s,%s,%s,%s\n", nameString, ID, password, phoneString);
+		}
+	}
+	fclose(user);
+	fclose(f_temp);
+	user = fopen(findUserType(id) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, "w");
+	fclose(user);
+	user = fopen(findUserType(id) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, "ab+");
+	f_temp = fopen(FILE_TEMP, "r");
+	
+	if (findUserType(id) == customer)
+	{
+		while (fscanf(f_temp, "%s", buf) == 1) //until the end of file
+		{
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, phoneString, supermarketPoints);
+			fprintf(user, "%s,%s,%s,%s,%s\n", nameString, ID, password, phoneString, supermarketPoints);
+		}
+	}
+
+	else
+	{
+		while (fscanf(f_temp, "%s", buf) == 1) //until the end of file
+		{
+			sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, phoneString);
+			fprintf(user, "%s,%s,%s,%s\n", nameString, ID, password, phoneString);
+		}
+
+	}
+	fclose(user);
+	fclose(f_temp);
+	f_temp = fopen(FILE_TEMP, "w");
+	fclose(f_temp);
+}
+void printProfile() 
+{
+	printf("Name --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readName)); //Doesnt print the whole name
+	printf("ID --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readId));
+	printf("Password --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readPassword));
+	printf("Phone --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readPhone));
+	
+	if (findUserType(Identity) == customer)
+	{
+		printf("Supermarket points --> %s\n", readUser(FILE_CUSTOMERS, Identity, readSupermarketPoints)); //Doesnt work
+		//printf("Orders: %d\n ", readUser(FILE_CUSTOMERS, id, readOrders));
+	}
+}
+void store()
+{
+	int interface;
+	printf("\nWelcome to the store\n'1' Print products\t'2' Search\t'3' Categories\t'4' Shopping cart\t'5' Exit\n");
+	scanf_s("%d", &interface);
+
+	switch (interface)
+	{
+	case 1:
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	case 4:
+		//shopping cart
+		break;
+	case 5:
+		break;
+	}
+}
+
 
 int main()
 {
 	checkFolder();
 	checkFiles();
 	welcomeScreen();
+
 
 	return 0;
 }
