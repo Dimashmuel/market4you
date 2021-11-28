@@ -16,19 +16,27 @@
 // FILES
 #define FILE_CUSTOMERS "data\\users\\customers.csv"
 #define FILE_MANAGERS "data\\users\\managers.csv"
+#define FILE_TEMP "data\\users\\temp.csv"
+#define FILE_TICKET "data\\tickets\\ticket.csv"
 #define FILE_CATALOG "data\\catalog.csv"
 #define FILE_GLOBAL "data\\global.csv"
 #define FILE_ORDERS "data\\orders.csv"
+#define FILE_ORDER "data\\temp.csv"
+
 
 // FOLDERS
 #define FOLDER_DATA "data\\"
 #define FOLDER_DATA_USERS "data\\users\\"
 #define FOLDER_DATA_ORDERS "data\\orders\\"
+#define FOLDER_DATA_TICKETS "data\\tickets"
 
 typedef enum { readId, readPassword, readName, readPhone, readSupermarketPoints } FieldUser;
 typedef enum { productName, productCompany, productCategory, productQuantity, productPrice } FieldProduct;
 typedef enum { none, customer, manager } UserType;
 typedef enum { false, true } bool;
+
+// Global variables
+char* Identity;
 
 /// <summary>
 /// STRUCTS
@@ -80,7 +88,7 @@ void checkFolder();
 void createFolder(char* dirname);
 void writeFile(char* filename, char* content);
 void writeUserType(Details* d, UserType type);
-Details readUser(char* filename, char* id, FieldUser field);
+Details readUser(char* filename, char* id);
 bool doesFileExists(char* filename);
 FILE* openFile(char* filename, char* access, char* skipFormat);
 
@@ -92,7 +100,7 @@ bool verifyAge();
 bool verifyPhone(Details* d);
 bool termsAndConditions();
 UserType findUserType(char* id);
-UserType loginUser();
+void loginUser();
 
 // Catalog & cart functions definitions
 void catalogAddProduct();
@@ -114,6 +122,17 @@ void welcomeScreen();
 void customerMenu();
 void managerMenu();
 void addToCart(Cart* cart, Product product);
+
+void registerStage();
+void profile();
+void updateProfile();
+void printProfile();
+
+void managerStoreActions();
+bool checkPassword(char** _Password);
+bool checkPhone(char** _Phone);
+void updateCatalog(Product* p, int updateQuantity);
+void deleteFromCatalog(Product* p);
 // Global
 /*
 char* userId;
