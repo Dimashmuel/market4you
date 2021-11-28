@@ -90,17 +90,16 @@ void writeFile(char* filename, char* content)
 void writeUserType(Details* d, UserType type) {
 	char output[200];
 	type == customer ?
-		sprintf(output, "%s,%s,%s,%f,%s", d->name, d->ID, d->password, d->points, d->phone) : // customer
-		sprintf(output, "%s,%s,%s,%s", d->name, d->ID, d->password, d->phone); // manager
+		sprintf(output, "%s,%s,%s,%.2f,%s\n", d->name, d->ID, d->password, 0.0, d->phone) : // customer
+		sprintf(output, "%s,%s,%s,%s\n", d->name, d->ID, d->password, d->phone); // manager
 
 	type == customer ?
 		writeFile(FILE_CUSTOMERS, output) :
 		writeFile(FILE_MANAGERS, output);
 }
 
-Details readUser(char* filename, char* id)
+Details* readUser(char* filename, char* id, FieldUser field)
 {
-	FieldUser field = findUserType(id);
 	Details details = { NULL, NULL, NULL, NULL, 0 };
 	char nameString[100], ID[20], password[100], phoneString[20];
 	float supermarketPoints = 0;
@@ -123,13 +122,13 @@ Details readUser(char* filename, char* id)
 		{
 			Details returnDetails = { nameString, ID, password, phoneString, supermarketPoints };
 			fclose(file);
-			return returnDetails;
+			return &returnDetails;
 		}
 
 
 	}
 	fclose(file);
-	return details;
+	return &details;
 }
 
 bool doesFileExists(char* filename)
@@ -354,7 +353,7 @@ bool termsAndConditions()
 {
 	char terms;
 
-	printf("Do you agree to the terms and conditions (Y/N)\nInput --> ");
+	printf("Terms and Conditions\n\n1. The Site, including any content and / or service available through it, is provided to you 'As It Is'. Although the Company takes all efforts to present the Site or through it as accurate and reliable information as possible, the Company is not and will not be responsible, directly or indirectly, for the availability, veracity, reliability and/or accuracy of the content appearing on the Site, and reliance on any content displayed on or through the Site is at your full responsibility.\n\n2. You may use the Site and the content available through it for private and personal purposes only. The content of the Site does not grant you any rights other than those set forth in these Terms, which constitutes an agreement for all intents and purposes between you and the Company.\n\n3. The content of the Website may not be used as a basis for the purpose of making financial, legal, personal and/or other decisions on your part. Any action taken by you based on this Content is done at your sole discretion and at your own responsibility. Products, descriptions, design, colors or the appearance of products and services described or displayed on the site are for illustration purposes only, in order to simulate the user's desired product in the closest and best way. If you have identified a significant gap between the visibility of the actual requested product and the product appearing on the site, please contact us to correct it, at the company's sole discretion. In any case, the Company shall not be liable in connection with any product and/or recipe and/or recommendations detailed or displayed on the website and through it.\n\nDo you agree to the terms and conditions (Y/N)\nInput --> ");
 	getchar();
 	scanf("%c", &terms);
 
@@ -373,14 +372,14 @@ bool termsAndConditions()
 	}
 }
 UserType findUserType(char* id)
-{
-	Details details = readUser(FILE_CUSTOMERS, id, readId);
+{ 
+	Details* details = readUser(FILE_CUSTOMERS, id, customer);
 
-	if (details.ID)
+	if (details->ID)
 		return customer;
 
-	details = readUser(FILE_MANAGERS, id, readId);
-	if (details.ID)
+	details = readUser(FILE_MANAGERS, id, manager);
+	if (details->ID)
 		return manager;
 
 	return none;
@@ -402,7 +401,9 @@ void loginUser()
 	printf("Password --> ");
 	inputString(&pass);
 
-	if (strcmp(readUser(type == customer ? FILE_CUSTOMERS : FILE_MANAGERS, userId, readPassword).password, pass) == 0)
+	Details* user = readUser(type == customer ? FILE_CUSTOMERS : FILE_MANAGERS, userId, type);
+
+	if (strcmp(readUser(type == customer ? FILE_CUSTOMERS : FILE_MANAGERS, userId, readPassword)->password, pass) == 0)
 	{
 		printf("You've successfully logged in as a ");
 		if (type == customer)
@@ -621,7 +622,6 @@ void customerShop(Cart* cart) {
 	addedProduct.quantity = selectedQuantity;
 	addToCart(cart, addedProduct);
 	updateCatalog(&product, product.quantity - selectedQuantity);
-
 }
 
 Product selectProduct(Cart cart) {
@@ -947,21 +947,21 @@ void writeOrder(Cart* cart, char* id) {
 	fprintf(file, "%d,%s,%.2f,%d/%d/%d,WAITING\n", getNextOrderId(), id, total, date.day, date.month, date.year);
 	fclose(file);
 	appendOrderId();
-	Details user = readUser(FILE_CUSTOMERS, id, customer);
+	Details* user = readUser(FILE_CUSTOMERS, id, customer);
 	int ans;
-	if (user.points != 0) {
-		printf("You have %.2f supermakert points available to use, would you like to reedem them in this purchase?\n1. Yes\n2. No\nSelect option --> ", user.points);
+	if (user->points != 0) {
+		printf("You have %.2f supermakert points available to use, would you like to reedem them in this purchase?\n1. Yes\n2. No\nSelect option --> ", user->points);
 		scanf("%d", &ans);
 		while (ans != 1 && ans != 2) {
 			printf("Would you like to reedem them in this purchase?\n1. Yes\n2. No\nSelect option --> ");
 			scanf("%d", &ans);
 		}
 		if (ans == 1) {
-			updatePoints(id, user.points > total ? user.points - total : 0);
+			updatePoints(id, user->points > total ? user->points - total : 0);
 		}
 	}
 	printf("In this purchase you've earned %.2f supermarket points (3%% of your purchase amount).\n", total*0.03);
-	updatePoints(id, user.points + total * 0.03);
+	updatePoints(id, user->points + total * 0.03);
 }
 void printOrder(int orderId) {
 	char source[300];
@@ -1054,7 +1054,7 @@ void updatePoints(char* id, float newPoints) {
 }
 void showOrders() {
 	int option;
-	printf("1. All Orders\n2. Unconfimred Orders\nSelect option --> ");
+	printf("1. Print All Orders\n2. Confirm Unconfirmed Orders\nSelect option --> ");
 	scanf("%d", &option);
 	while (!(option <= 3 && option >= 0)) {
 		printf("Invalid selection, please try again.\nSelect option --> ");
@@ -1395,7 +1395,7 @@ void updateCatalog(Product* p, int updateQuantity)
 
 			if (interface == 2)
 			{
-				if (updatedQuantity == -1) {
+				if (updateQuantity == -1) {
 					while (updatedQuantity < 0)
 					{
 						printf("Updated Quantity --> ");
@@ -1628,14 +1628,16 @@ void updateProfile()
 }
 void printProfile()
 {
-	printf("Name --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readName)); //Doesnt print the whole name
-	printf("ID --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readId));
-	printf("Password --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readPassword));
-	printf("Phone --> %s\n", readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, readPhone));
+	Details* details = readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, Identity, findUserType(Identity));
+	
+	printf("Name --> %s\n", details->name); //Doesnt print the whole name
+	printf("ID --> %s\n", details->ID);
+	//printf("Password --> %s\n", details.password);
+	printf("Phone --> %s\n", details->phone);
 
 	if (findUserType(Identity) == customer)
 	{
-		printf("Supermarket points --> %s\n", readUser(FILE_CUSTOMERS, Identity, readSupermarketPoints)); //Doesnt work
+		printf("Supermarket points --> %f\n", details->points); //Doesnt work
 		//printf("Orders: %d\n ", readUser(FILE_CUSTOMERS, id, readOrders));
 	}
 }
@@ -1732,8 +1734,11 @@ void managerStoreActions()
 }
 //char* userId;
 int main() {
-	Cart cart;
-	welcomeScreen();
-	
+	Cart cart = { NULL, 0 };
+	Identity = copyString("317450724");
+	customerShop(&cart);
+	customerShop(&cart);
+	customerShop(&cart);
+	finishOrder(&cart, Identity);
 	return 0;
 }
