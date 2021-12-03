@@ -90,10 +90,9 @@ Details* readUser(char* filename, UserType type); //Does Not Work!
 UserType findUserType();
 
 // Authentication (Done)
-void registerUserType(UserType type);
 bool verifyName(Details* d);
 bool verifyPassword(Details* d);
-bool verifyId(Details* d, bool* flag);
+bool verifyId(Details* d);
 bool verifyAge();
 bool verifyPhone(Details* d);
 bool verifyPayment(char* creditCard, char* cvv, int expirationMonth, int expirationYear);
@@ -128,20 +127,17 @@ int calcDateDiff(Date d2);
 Date getCurrentDate();
 
 //Manager + Customer (Done)
+void registerUserType(UserType type);
 void welcomeScreen();
 void registerStage();
 void loginUser();
 void profile();
 void printProfile(); //Doesnt Work
-void updateProfile(); //Work (Can add few more options)
+void updateProfile(); //Fix case 2
 bool doesProductExist(char* filename, char* _productName, char* _company);
 Product selectProduct(Cart cart);
 Product readProduct(char* filename, char* _productName, char* _company);
 Cart retrieveProducts(bool returnAll, char* search, char* searchCategory);
-
-//Temp
-bool checkPassword(char** _Password);
-bool checkPhone(char** _Phone);
 
 //Place in the right subject
 int getNextOrderId();
@@ -150,3 +146,24 @@ void appendOrderId();
 
 // Question Mark
 void printProduct(Product* product); //Doesnt exist, does we need it ?
+
+
+// Yellow Warnings
+// addToCart
+// removeFromCart
+// selectByCategory
+// deleteFromCatalog
+// updateCatalog
+// printRevenue
+// printOrder
+// changeOrderStatus
+// getCurrentDate
+// updateProfile
+// doesProductExist
+// readProduct
+// retrieveProducts
+// getNextOrderId
+// getNextOrderIdStr
+// appendOrderId
+
+// showOrders (Can be much shorter)
