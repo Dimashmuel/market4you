@@ -16,11 +16,11 @@
 #define MIN_PASSWORD_LEN 6
 
 // Files (We got 2 temp files)
-#define FILE_ORDER "data\\temp.csv" //Temp??
+#define FILE_ORDER "data\\temp.csv"
 #define FILE_ORDERS "data\\orders.csv"
-#define FILE_GLOBAL "data\\global.csv" // ??
+#define FILE_GLOBAL "data\\global.csv"
 #define FILE_CATALOG "data\\catalog.csv"
-#define FILE_TEMP "data\\users\\temp.csv" //Temp ??
+#define FILE_TEMP "data\\users\\temp.csv"
 #define FILE_TICKET "data\\tickets\\ticket.csv"
 #define FILE_MANAGERS "data\\users\\managers.csv"
 #define FILE_CUSTOMERS "data\\users\\customers.csv"
@@ -86,7 +86,7 @@ void createFolder(char* dirname);
 void writeFile(char* filename, char* content);
 void writeUserType(Details* d, UserType type); 
 bool doesFileExists(char* filename);
-Details* readUser(char* filename, UserType type); //Does Not Work!
+Details* readUser(char* filename, UserType type);
 UserType findUserType();
 
 // Authentication (Done)
@@ -121,8 +121,8 @@ void updateCatalog(Product* p, int userQuantity);
 void seeTickets(); //Work (add option to delete ticket after manager mark it)
 void printRevenue();
 void showOrders();
-void printOrder(int orderId); //Work (Fix UI)
-void changeOrderStatus(int id); //Fix to every order rather the last
+void printOrder(int orderId);
+void changeOrderStatus(int id);
 int calcDateDiff(Date d2);
 Date getCurrentDate();
 
@@ -132,8 +132,8 @@ void welcomeScreen();
 void registerStage();
 void loginUser();
 void profile();
-void printProfile(); //Doesnt Work
-void updateProfile(); //Fix case 2
+void printProfile();
+void updateProfile();
 bool doesProductExist(char* filename, char* _productName, char* _company);
 Product selectProduct(Cart cart);
 Product readProduct(char* filename, char* _productName, char* _company);
@@ -143,9 +143,6 @@ Cart retrieveProducts(bool returnAll, char* search, char* searchCategory);
 int getNextOrderId();
 char* getNextOrderIdStr();
 void appendOrderId();
-
-// Question Mark
-void printProduct(Product* product); //Doesnt exist, does we need it ?
 
 
 // Yellow Warnings
