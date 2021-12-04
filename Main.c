@@ -1,10 +1,9 @@
 #include "SuperMarket.h"
 
-
 // Strings (Done)
 void inputString(char** _str) {
 
-	char str[100];
+	char str[100] = { NULL };
 
 	scanf_s("%s", str, 100);
 	*_str = malloc(strlen(str) * sizeof(char) + sizeof(char));
@@ -13,7 +12,7 @@ void inputString(char** _str) {
 void appendString(char** _str1, char* _str2) {
 
 	char* str = malloc((strlen(*_str1) + strlen(_str2)) * sizeof(char) + sizeof(char));
-	if (str == NULL) exit(1);
+	if (!str) exit(1);
 
 	strcpy(str, *_str1);
 	strcat(str, _str2);
@@ -33,7 +32,7 @@ void appendStringNewLine(char** _str1, char* _str2) {
 char* copyString(char* _str) {
 
 	char* str = malloc(sizeof(char) * strlen(_str) + sizeof(char));
-	if (str == NULL)
+	if (!str)
 		exit(1);
 
 	strcpy(str, _str);
@@ -44,11 +43,9 @@ char* strToLower(char* _str) {
 	char* str = copyString(_str);
 	if (!str) exit(1);
 
-	for (int i = 0; i < strlen(_str); i++) {
-
+	for (int i = 0; i < strlen(_str); i++)
 		str[i] = tolower(str[i]);
-	}
-	
+
 	return str;
 }
 
@@ -86,6 +83,7 @@ void writeFile(char* filename, char* content) {
 void writeUserType(Details* d, UserType type) {
 
 	char output[200];
+
 	if (type == customer) {
 
 		sprintf(output, "%s,%s,%s,%.2f,%s\n", d->name, d->ID, d->password, 0.0, d->phone);
@@ -106,21 +104,21 @@ bool doesFileExists(char* filename) {
 Details* readUser(char* filename, UserType type) {
 
 	Details details = { NULL, NULL, NULL, NULL, 0 };
-	char nameString[100], ID[20], password[100], phoneString[20];
+	char nameString[100] = { NULL }, IdString[100] = { NULL }, passwordString[100] = { NULL }, phoneString[100] = { NULL };
 	float supermarketPoints = 0;
 
 	FILE* file = fopen(filename, "r");
 	if (!file) exit(1);
 
-	char buf[500];
-	while (fscanf(file, "%s", buf) == 1) {
+	char buffer[500] = { NULL };
+	while (fscanf(file, "%s", buffer) == 1) {
 
-		if (type == customer) sscanf(buf, "%[^,],%[^,],%[^,],%f,%[^,]", nameString, ID, password, &supermarketPoints, phoneString);
-		if (type == manager)  sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", nameString, ID, password, phoneString);
+		if (type == customer) sscanf(buffer, "%[^,],%[^,],%[^,],%f,%[^,]", nameString, IdString, passwordString, &supermarketPoints, phoneString);
+		if (type == manager)  sscanf(buffer, "%[^,],%[^,],%[^,],%[^,]", nameString, IdString, passwordString, phoneString);
 
-		if (strcmp(ID, Identity) == 0) {
+		if (strcmp(IdString, Identity) == 0) {
 
-			Details returnDetails = {nameString, ID, password, phoneString, supermarketPoints };
+			Details returnDetails = { copyString(nameString), copyString(IdString), copyString(passwordString), copyString(phoneString), supermarketPoints };
 			fclose(file);
 			return &returnDetails;
 		}
@@ -141,70 +139,15 @@ UserType findUserType() {
 }
 
 // Authentication (Done)
-void registerUserType(UserType type) {
-
-	Details d;
-
-	printf("\nRegister Stage:\n");
-
-	while (!verifyName(&d))
-		printf("Invalid, Try again\n\n");
-
-	while (!verifyPassword(&d))
-		printf("Invalid, Try again\n\n");
-
-	bool flag = false;
-	while (!verifyId(&d, &flag)) {
-
-		if (flag) {
-
-			printf("ID already exist in the system.\n");
-
-			int interface;
-
-			printf("\nAvailable actions:\n'1' Wrong ID try again\n'2' Try to login\n'3' Reported for Identity steal\n\nInput --> ");
-			scanf_s("%d", &interface);
-
-			switch (interface) {
-
-			case 1:
-				break;
-
-			case 2:
-				loginUser();
-				return;
-
-			case 3:
-				printf("We are sry to hear, Your report will be treated\n");
-				return;
-			}
-		}
-
-		else
-			printf("Invalid, Try again!\n\n");
-	}
-
-	if (type == customer)
-		if (!verifyAge())
-			return;
-
-	while (!verifyPhone(&d))
-		printf("Invalid, Try again\n\n");
-
-	if (!termsAndConditions())
-		return;
-
-	writeUserType(&d, type);
-}
 bool verifyName(Details* d) {
 
-	char string[100];
+	char string[100] = { NULL };
 	printf("Name --> ");
-	scanf(" %[^\n]", string);
+	scanf_s(" %[^\n]", string, 100);
 
 	for (int i = 0; i < strlen(string); i++) {
 
-		if (!(string[i] >= 'a' && string[i] <= 'z') || (string[i] >= 'A' && string[i] <= 'Z')) {
+		if (!((string[i] >= 'a' && string[i] <= 'z') || (string[i] >= 'A' && string[i] <= 'Z'))) {
 
 			printf("Name Is Contain Only English Alphabet\n");
 			d->name = NULL;
@@ -260,13 +203,15 @@ bool verifyPassword(Details* d) {
 
 	return false;
 }
-bool verifyId(Details* d, bool* flag) {
+bool verifyId(Details* d) {
 
 	char* str;
 
 	printf("ID --> ");
 	inputString(&str);
+	
 	Identity = str;
+	
 	long idVal = strtol(str, NULL, 10);
 	int Digit1, Digit2, Digit3, Digit4, Digit5, Digit6, Digit7, Digit8, Digit9, Sum, Res;
 
@@ -304,7 +249,30 @@ bool verifyId(Details* d, bool* flag) {
 
 			if (findUserType(str)) {
 
-				*flag = true;
+				int interface = -1;
+				printf("ID already exist in the system\n");
+
+				if (!(interface > 0 && interface <= 2)) {
+
+					printf("\nAvailable Actions\n'1' Wrong ID\t'2' Report for Identity steal\nInput --> ");
+					scanf_s("%d", &interface);
+
+					while (!(interface > 0 && interface <= 2)) {
+
+						printf("Invalid input, Try again\nInput --> ");
+						scanf_s("%d", &interface);
+					}
+				}
+					
+				switch (interface) {
+
+				case 1:
+					break;
+
+				case 2:
+					printf("We are sry to hear, Your report will be treated\nGoodbye\n");
+					exit(1);
+				}
 				return false;
 			}
 
@@ -341,7 +309,7 @@ bool verifyPhone(Details* d) {
 	printf("Phone --> ");
 	inputString(&str);
 
-	if (str == NULL) exit(1);
+	if (!str) exit(1);
 
 	if (strlen(str) != PHONE_NUM_LEN) {
 
@@ -362,58 +330,61 @@ bool verifyPhone(Details* d) {
 	return true;
 }
 bool verifyPayment(char* creditCard, char* cvv, int expirationMonth, int expirationYear) {
-	if (expirationMonth <= 0 || expirationMonth > 12) {
+	
+	if (expirationMonth <= 0 || expirationMonth > 12)
 		return false;
-	}
-	for (int i = 0; i < strlen(creditCard); i++) {
-		if (!(creditCard[i] >= '0' && creditCard[i] <= '9')) {
+
+	for (int i = 0; i < strlen(creditCard); i++)
+		if (!(creditCard[i] >= '0' && creditCard[i] <= '9'))
 			return false;
-		}
-	}
-	for (int i = 0; i < strlen(cvv); i++) {
-		if (!(cvv[i] >= '0' && cvv[i] <= '9')) {
+
+	for (int i = 0; i < strlen(cvv); i++)
+		if (!(cvv[i] >= '0' && cvv[i] <= '9'))
 			return false;
-		}
-	}
+
 	Date date = getCurrentDate();
 	if (date.year > expirationYear)
 		return false;
+
 	else if (date.year == expirationYear)
 		return date.month <= expirationMonth;
-	return true;
 
+	return true;
 }
 bool termsAndConditions() {
 
-	char terms;
+	char terms = { NULL };
 
-	printf("Terms and Conditions\n\n1. The Site, including any content and / or service available through it, is provided to you 'As It Is'. Although the Company takes all efforts to present the Site or through it as accurate and reliable information as possible, the Company is not and will not be responsible, directly or indirectly, for the availability, veracity, reliability and/or accuracy of the content appearing on the Site, and reliance on any content displayed on or through the Site is at your full responsibility.\n\n2. You may use the Site and the content available through it for private and personal purposes only. The content of the Site does not grant you any rights other than those set forth in these Terms, which constitutes an agreement for all intents and purposes between you and the Company.\n\n3. The content of the Website may not be used as a basis for the purpose of making financial, legal, personal and/or other decisions on your part. Any action taken by you based on this Content is done at your sole discretion and at your own responsibility. Products, descriptions, design, colors or the appearance of products and services described or displayed on the site are for illustration purposes only, in order to simulate the user's desired product in the closest and best way. If you have identified a significant gap between the visibility of the actual requested product and the product appearing on the site, please contact us to correct it, at the company's sole discretion. In any case, the Company shall not be liable in connection with any product and/or recipe and/or recommendations detailed or displayed on the website and through it.\n\nDo you agree to the terms and conditions (Y/N)\nInput --> ");
-	getchar();
-	scanf("%c", &terms);
+	printf("Terms and Conditions\n\n1. The Site, including any content and / or service available through it, is provided to you 'As It Is'. Although the Company takes all efforts to present the Site or through it as accurate and reliable information as possible, the Company is not and will not be responsible, directly or indirectly, for the availability, veracity, reliability and/or accuracy of the content appearing on the Site, and reliance on any content displayed on or through the Site is at your full responsibility.\n\n2. You may use the Site and the content available through it for private and personal purposes only. The content of the Site does not grant you any rights other than those set forth in these Terms, which constitutes an agreement for all intents and purposes between you and the Company.\n\n3. The content of the Website may not be used as a basis for the purpose of making financial, legal, personal and/or other decisions on your part. Any action taken by you based on this Content is done at your sole discretion and at your own responsibility. Products, descriptions, design, colors or the appearance of products and services described or displayed on the site are for illustration purposes only, in order to simulate the user's desired product in the closest and best way. If you have identified a significant gap between the visibility of the actual requested product and the product appearing on the site, please contact us to correct it, at the company's sole discretion. In any case, the Company shall not be liable in connection with any product and/or recipe and/or recommendations detailed or displayed on the website and through it.\n\n");
 
-	while (terms != 'Y' || terms != 'N')
-	{
-		if (terms == 'Y') return true;
+	if (terms != 'Y' && terms != 'N') {
 
-		else if (terms == 'N') return false;
+		printf("Do you agree to the terms and conditions (Y/N)\nInput --> ");
+		(void)getchar();
+		scanf_s("%c", &terms, 1);
 
-		else {
+		while (terms != 'Y' && terms != 'N') {
 
-			printf("Invalid, Try again\nInput --> ");
-			getchar();
-			scanf("%c", &terms);
+			printf("Invalid input, Try again\nInput --> ");
+			(void)getchar();
+			scanf_s("%c", &terms, 1);
 		}
 	}
+	
+	if (terms == 'Y') return true;
+
+	else if (terms == 'N') return false;
 }
 
 //CustomerMenu(Done)
 void customerMenu() {
 
-	Cart c = { NULL , 0};
+	Cart c = { NULL , 0 };
+	
 	while (true) {
 
 		int interface;
-		printf("\n'1' Store\t'2' Profile\t'3' View Cart\t'4' Finish Order\t'5' Submit Ticket\t'6' Exit\nInput --> ");
+		printf("\nCustomer Actions\n'1' Store\t'2' Profile\t'3' View Cart\t'4' Finish Order\t'5' Submit Ticket\t'6' Exit\nInput --> ");
 		scanf_s("%d", &interface);
 
 		switch (interface) {
@@ -445,25 +416,27 @@ void customerMenu() {
 	}
 }
 void customerShop(Cart* cart) {
-	
+
 	Product product;
 	char* search;
-	char* category;
-	int interface;
-	
-	printf("\nSearch by\n'1' Name/Company\t'2' Category\t'3' Show All Products\nInput --> ");
-	scanf_s("%d", &interface);
-	
-	while (!(interface <= 3 && interface >= 1)) {
+	char* category = NULL;
 
-		printf("Invalid input, Try again\n");
-		printf("'1' Name/Company\t'2' Category\t'3' Show All Products\nInput --> ");
+	int interface = -1;
+	if (!(interface <= 3 && interface >= 1)) {
+
+		printf("\nSearch Product By\n'1' Name/Company\t'2' Category\t'3' Show All Products\nInput --> ");
 		scanf_s("%d", &interface);
+
+		while (!(interface <= 3 && interface >= 1)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
 	}
-	
+
 	if (interface == 1) {
 
-		printf("Name/Company --> ");
+		printf("\nName/Company --> ");
 		inputString(&search);
 		product = selectProduct(retrieveProducts(false, search, NULL));
 	}
@@ -471,7 +444,7 @@ void customerShop(Cart* cart) {
 	else if (interface == 2)
 		product = selectByCategory();
 
-	else 
+	else
 		product = selectProduct(retrieveProducts(false, NULL, NULL));
 
 	if (!product.name) {
@@ -481,14 +454,16 @@ void customerShop(Cart* cart) {
 	}
 
 	int selectedQuantity = -1;
-	
-	printf("Product Quantity --> ");
-	scanf_s("%d", &selectedQuantity);
-	
-	while (!(selectedQuantity > 0 && selectedQuantity <= product.quantity)) {
+	if (!(selectedQuantity > 0 && selectedQuantity <= product.quantity)) {
 
-		printf("Invalid input, Try again\nInput --> ");
+		printf("\nProduct Quantity --> ");
 		scanf_s("%d", &selectedQuantity);
+
+		while (!(selectedQuantity > 0 && selectedQuantity <= product.quantity)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &selectedQuantity);
+		}
 	}
 	
 	Product addedProduct = product;
@@ -497,88 +472,100 @@ void customerShop(Cart* cart) {
 	updateCatalog(&product, product.quantity - selectedQuantity);
 }
 void viewCart(Cart* cart) {
-	
-	printCart(cart);
-	int option = -1;
 
-	while (!(option > 0 && option < 3)) {
+	printCart(cart);
+	
+	int interface = -1;
+	if (!(interface > 0 && interface <= 2)) {
 
 		printf("\n'1' Edit Cart\t'2' Back To Menu\nInput --> ");
-		scanf_s("%d", &option);
+		scanf_s("%d", &interface);
 
-		if (!(option > 0 && option < 3))
-			printf("Invalid input, Try again\n");
+		while (!(interface > 0 && interface <= 2)) {
+			
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
 	}
-	
-	switch (option) {
+
+	switch (interface) {
 
 	case 1:
 	{
-		int anotherOption = 0;
-		while (!(anotherOption - 1 < cart->itemsCount && anotherOption > 0)) {
+		int optionA = 0;
+		if (!(optionA - 1 < cart->itemsCount && optionA > 0)) {
 
 			printf("Select Product --> ");
-			scanf_s("%d", &anotherOption);
+			scanf_s("%d", &optionA);
 
-			if (!(anotherOption - 1 < cart->itemsCount && anotherOption > 0))
-				printf("Invalid input, Try again\n");
+			while (!(optionA - 1 < cart->itemsCount && optionA > 0)) {
+
+				printf("Invalid input, Try again\nInput --> ");
+				scanf_s("%d", &optionA);
+
+			}
 		}
 
-		int newOption = -1;
-		while (!(newOption > 0 && newOption < 4)) {
+		int optionB = -1;
+		if (!(optionB > 0 && optionB <= 3)) {
 
 			printf("\n'1' Change Quantity\t'2' Remove Product\t'3' Exit\nInput --> ");
-			scanf_s("%d", &newOption);
-			
-			if (!(newOption > 0 && newOption < 4))
-				printf("Invalid input, Try again\n");
+			scanf_s("%d", &optionB);
+
+			while (!(optionB > 0 && optionB <= 3)) {
+
+				printf("Invalid input, Try again\nInput --> ");
+				scanf_s("%d", &optionB);
+
+			}
 		}
 
-		if (newOption == 1) {
-			
-			newOption = -1;
-			while (newOption < 0) {
+		if (optionB == 1) {
+
+			optionB = -1;
+			if (optionB < 0) {
 
 				printf("New Quantity --> ");
-				scanf_s("%d", &newOption);
+				scanf_s("%d", &optionB);
 
-				if (newOption < 0)
-					printf("Invalid input, Try agian\n");
+				while (optionB < 0) {
+
+					printf("Invalid input, Try again\nInput --> ");
+					scanf_s("%d", &optionB);
+				}
 			}
-			changeQuantity(cart, anotherOption - 1, newOption);
+			changeQuantity(cart, optionA - 1, optionB);
 		}
 
-		if (newOption == 2) {
-			
-			int anotherOption = 0;
-			while (!(anotherOption - 1 < cart->itemsCount && anotherOption > 0)) {
-				printf("Select Product --> ");
-				scanf_s("%d", &anotherOption);
+		if (optionB == 2) {
 
-				if (!(anotherOption - 1 < cart->itemsCount && anotherOption > 0))
-				printf("Invalid input, Try again\n");
+			int optionA = 0;
+			if (!(optionA - 1 < cart->itemsCount && optionA > 0)) {
 				
+				printf("Select Product --> ");
+				scanf_s("%d", &optionA);
+
+				while (!(optionA - 1 < cart->itemsCount && optionA > 0)) {
+
+					printf("Invalid input, Try again\nInput --> ");
+					scanf_s("%d", &optionA);
+				}
 			}
-			removeFromCart(cart, anotherOption - 1);
+			removeFromCart(cart, optionA - 1);
 		}
 		break;
 	}
 
 	case 2:
 		return;
-
-	default:
-
-		printf("Bad option, returning to menu.\n");
-		break;
 	}
 }
 void printCart(Cart* cart) {
 
 	printf("\n%-15s%-15s%-15s%-15s%-15s%-15s\n", "ID", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
-	
+
 	float total = 0;
-	
+
 	for (int i = 0; i < cart->itemsCount; i++) {
 
 		printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n",
@@ -590,21 +577,22 @@ void printCart(Cart* cart) {
 			cart->products[i].quantity);
 		total += cart->products[i].price * cart->products[i].quantity;
 	}
-	printf("Total: %.2f\n", total);
+	printf("Total --> %.2f\n\n", total);
 }
 void openTicket() {
 
-	char buf[500], _Index[50], _Report[400];
+	char _Index[50] = { NULL }, _Report[500] = { NULL };
 	int num = 0;
 
 	FILE* User = fopen(FILE_TICKET, "ab+");
 	if (!User) exit(1);
 
 	printf("Report --> ");
-	getchar();
-	scanf("%[^\n]", _Report);
+	(void)getchar();
+	scanf_s("%[^\n]", _Report, 500);
 
-	while (fgets(buf, 500, User))
+	char buffer[500] = { NULL };
+	while (fgets(buffer, 500, User))
 		num++;
 
 	sprintf(_Index, "%d", num);
@@ -612,10 +600,13 @@ void openTicket() {
 	fclose(User);
 }
 void addToCart(Cart* cart, Product product) {
+	
 	if (cart->itemsCount == 0) {
+
 		cart->products = malloc(sizeof(Product));
 		cart->products[0] = product;
 	}
+
 	else {
 		Product* newProducts = malloc(sizeof(Product) * (cart->itemsCount + 1));
 		for (int i = 0; i < cart->itemsCount; i++) newProducts[i] = cart->products[i];
@@ -630,6 +621,7 @@ void removeFromCart(Cart* cart, int index) {
 	Product p = readProduct(FILE_CATALOG, cart->products[index].name, cart->products[index].company);
 
 	updateCatalog(&p, p.quantity + cart->products[index].quantity);
+	
 	for (int i = 0; i < index; i++) {
 
 		Product tempProduct = {
@@ -656,7 +648,7 @@ void removeFromCart(Cart* cart, int index) {
 	cart->itemsCount--;
 }
 void changeQuantity(Cart* cart, int index, int newQuantity) {
-	
+
 	bool flag = false;
 	Product p = readProduct(FILE_CATALOG, cart->products[index].name, cart->products[index].company);
 	int availableQuantity = p.quantity;
@@ -665,7 +657,7 @@ void changeQuantity(Cart* cart, int index, int newQuantity) {
 
 		if (newQuantity - cart->products[index].quantity > availableQuantity)
 			printf("Available Stock --> %d\n", availableQuantity);
-		
+
 		else {
 
 			updateCatalog(&p, availableQuantity - (newQuantity - cart->products[index].quantity));
@@ -680,14 +672,19 @@ void changeQuantity(Cart* cart, int index, int newQuantity) {
 	}
 }
 void writeOrder(Cart* cart, char* id) {
-	char source[300];
+	
+	char source[300] = { NULL };
 	sprintf(source, "%s%s.csv", FOLDER_DATA_ORDERS, getNextOrderIdStr());
+	
 	FILE* file = fopen(source, "w");
+	if (!file) exit(1);
+
 	Date date = getCurrentDate();
 	fprintf(file, "%d,%d,%d/%d/%d\n", getNextOrderId(), cart->itemsCount, date.day, date.month, date.year);
+	
 	float total = 0;
-	int i;
-	for (i = 0; i < cart->itemsCount; i++) {
+	
+	for (int i = 0; i < cart->itemsCount; i++) {
 		fprintf(file, "%s,%s,%s,%f,%d\n",
 			cart->products[i].name,
 			cart->products[i].company,
@@ -696,33 +693,46 @@ void writeOrder(Cart* cart, char* id) {
 			cart->products[i].quantity);
 		total += cart->products[i].price * cart->products[i].quantity;
 	}
+
 	fprintf(file, "%.2f\n", total);
 	fclose(file);
+	
 	file = fopen(FILE_ORDERS, "ab+");
+	if (!file) exit(1);
+
 	fprintf(file, "%d,%s,%.2f,%d/%d/%d,WAITING\n", getNextOrderId(), id, total, date.day, date.month, date.year);
 	fclose(file);
+	
 	appendOrderId();
+	
 	Details* user = readUser(FILE_CUSTOMERS, customer);
-	int ans;
+	
+	int ans = 0;
 	if (user->points != 0) {
-		printf("You have %.2f supermakert points available to use, would you like to reedem them in this purchase?\n1. Yes\n2. No\nSelect option --> ", user->points);
+
+		printf("\nAvailable Market Points --> %.2f, Would You Like To Reedem em ? '1' Yes\t'2' No\nInput --> ", user->points);
 		scanf_s("%d", &ans);
+		
 		while (ans != 1 && ans != 2) {
-			printf("Would you like to reedem them in this purchase?\n1. Yes\n2. No\nSelect option --> ");
+
+			printf("Would You Like To Reedem Them In This Purchase? '1' Yes\t'2' No\nInput --> ");
 			scanf_s("%d", &ans);
 		}
 		if (ans == 1) {
 			updatePoints(id, user->points > total ? user->points - total : 0);
 		}
 	}
-	printf("In this purchase you've earned %.2f supermarket points (3%% of your purchase amount).\n", total * 0.03);
+	printf("In This Purchase You've Earned %.2f Market Points (3%% Of Your Purchase Amount)\n", total * 0.03);
 	updatePoints(id, user->points + total * 0.03);
 }
 void finishOrder(Cart* cart, char* id) {
+	
 	printCart(cart);
-	int ans;
-	printf("Please make sure the information shown above is correct.\nAre you sure you would like to finish the order?\n1. Yes\n2. No\nSelect option --> ");
+	
+	int ans = 0;
+	printf("Are You Sure You Would Like To Finish The Order?\n'1' Yes\n'2' No\nInput --> ");
 	scanf_s("%d", &ans);
+	
 	while (ans != 1 && ans != 2) {
 		printf("Incorrect answer, please try again.\n");
 		printf("Are you sure you would like to finish the order? (Y/N) ");
@@ -731,52 +741,74 @@ void finishOrder(Cart* cart, char* id) {
 	if (ans == 2)
 		return;
 
-	char creditCard[20], cvv[20];
-	int expirationMonth, expirationYear;
-	printf("Please enter your credit card number --> ");
-	scanf("%s", creditCard);
-	printf("Please enter the CVV --> ");
-	scanf("%s", cvv);
-	printf("Please enter expiration month (numerical value) --> ");
+	char creditCard[20] = { NULL }, cvv[20] = { NULL };
+	int expirationMonth = 0, expirationYear = 0;
+	
+	printf("Credit Card --> ");
+	scanf_s("%s", creditCard, 20);
+
+	printf("CCV --> ");
+	scanf_s("%s", cvv, 20);
+
+	printf("Expiration Month (Numerical Value) --> ");
 	scanf_s("%d", &expirationMonth);
-	printf("Please enter expiration year --> ");
+
+	printf("Expiration Year (Numerical Value) --> ");
 	scanf_s("%d", &expirationYear);
+
 	while (!verifyPayment(creditCard, cvv, expirationMonth, expirationYear)) {
+
 		printf("The entered card is invalid, please try again.\n");
+		
 		printf("Please enter your credit card number --> ");
-		scanf("%s", creditCard);
+		scanf_s("%s", creditCard, 20);
+		
 		printf("Please enter the CCV --> ");
-		scanf("%s", creditCard);
+		scanf_s("%s", cvv, 20);
+		
 		printf("Please enter expiration month (numerical value) --> ");
 		scanf_s("%d", &expirationMonth);
+		
 		printf("Please enter expiration year --> ");
 		scanf_s("%d", &expirationYear);
 	}
 	writeOrder(cart, id);
+	cart->itemsCount = 0;
+	free(cart->products);
 }
 void updatePoints(char* id, float newPoints) {
+
 	if (!doesFileExists(FILE_CUSTOMERS)) {
+
 		printf("Orders file missing..?");
 		return;
 	}
+	
 	FILE* file = fopen(FILE_CUSTOMERS, "r");
+	if (!file) exit(1);
+
 	int count = 0;
-	char buffer[500];
+	char buffer[500] = { NULL };
 	char* output = copyString("");
+
 	while (fscanf(file, "%s", buffer) == 1) {
-		char temp[500];
-		char name[30], customerId[40], pass[30], phone[30];
+		char temp[500] = { NULL };
+		char name[30] = { NULL }, customerId[40] = { NULL }, pass[30] = { NULL }, phone[30] = { NULL };
 		float points = -1;
+		
 		sscanf(buffer, "%[^,],%[^,],%[^,],%f,%[^,]", name, customerId, pass, &points, phone);
 		sprintf(temp, "%s,%s,%s,%f,%s\n", name, customerId, pass, strcmp(customerId, id) == 0 ? newPoints : points, phone);
 		appendString(&output, temp);
 	}
+	
 	fclose(file);
 	file = fopen(FILE_CUSTOMERS, "w");
+	if (!file) exit(1);
+
 	fputs(output, file);
 	fclose(file);
 	free(output);
-	printf("Current supermaker points %f.\n", newPoints);
+	printf("\nCurrent Market Points %.2f\n", newPoints);
 }
 Product selectByCategory() {
 
@@ -784,7 +816,7 @@ Product selectByCategory() {
 	Cart tempCart = retrieveProducts(false, NULL, NULL);
 	int count = 0;
 	char** categories = malloc(sizeof(char*) * tempCart.itemsCount);
-	
+
 	for (int i = 0; i < tempCart.itemsCount; i++) {
 
 		bool flag = false;
@@ -811,19 +843,16 @@ Product selectByCategory() {
 		printf("No categories found..?\n");
 		return;
 	}
-	
-	int ans = -1;
-	while (!(ans >= 0 && ans < count)) {
 
-		printf("Input --> ");
+	int ans = -1;
+	while (!(ans > 0 && ans <= count)) {
+
+		printf("Input No. --> ");
 		scanf_s("%d", &ans);
 		ans--;
 		
-		if (!(ans >= 0 && ans < count)) {
-			printf("Invalid input, Try again\nInput --> ");
-			scanf_s("%d", &ans);
-			ans--;
-		}
+		if (!(ans > 0 && ans <= count))
+			printf("Invalid input, Try again\n");
 	}
 	tempCart = retrieveProducts(false, NULL, categories[ans]);
 	return selectProduct(tempCart);
@@ -834,9 +863,19 @@ void managerMenu() {
 
 	while (true) {
 
-		int interface;
-		printf("\n'1' Store\t'2' Profile\t'3' View Orders \t'4' Store Profits \t'5' Reports\t'6' Exit\nInput --> ");
-		scanf_s("%d", &interface);
+		int interface = -1;
+
+		if (!(interface > 0 && interface <= 6)) {
+
+			printf("\nManager Actions\n'1' Store\t'2' Profile\t'3' View Orders \t'4' Store Profits \t'5' Reports\t'6' Exit\nInput --> ");
+			scanf_s("%d", &interface);
+
+			while (!(interface > 0 && interface <= 6)) {
+
+				printf("Invalid input, Try again\nInput --> ");
+				scanf_s("%d", &interface);
+			}
+		}
 
 		switch (interface) {
 
@@ -870,15 +909,18 @@ void managerStoreActions() {
 	int interface = -1;
 	Product p;
 
-	while (!(interface > 0 && interface < 5)) {
+	if (!(interface > 0 && interface <= 4)) {
 
-		printf("\n'1' Add Product\t'2' Delete Product\t'3' Update Product\t'4' Exit\n");
+		printf("\nStore Actions\n'1' Add Product\t'2' Delete Product\t'3' Update Product\t'4' Exit\nInput --> ");
 		scanf_s("%d", &interface);
 
-		if (!(interface > 0 && interface < 5))
-			printf("Invalid input, Try again\n");
+		while (!(interface > 0 && interface < 5)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
 	}
-	
+
 	switch (interface) {
 
 	case 1:
@@ -904,7 +946,7 @@ void addToCatalog() {
 	char* rProductName = NULL;
 	while (!rProductName) {
 
-		printf("Name --> ");
+		printf("\nName --> ");
 		inputString(&rProductName);
 
 		for (int i = 0; i < strlen(rProductName); i++) {
@@ -940,27 +982,7 @@ void addToCatalog() {
 			}
 		}
 	}
-
-	float rProductPrice = -1;
-	while (rProductPrice < 0) {
-
-		printf("Price --> ");
-		scanf_s("%f", &rProductPrice);
-
-		if (rProductPrice < 0)
-			printf("Invalid input, Try again\n\n");
-	}
-
-	int rProductQuantity = -1;
-	while (rProductQuantity < 0) {
-
-		printf("Quantity --> ");
-		scanf_s("%d", &rProductQuantity);
-
-		if (rProductQuantity < 0)
-			printf("Invalid input, Try again\n\n");
-	}
-
+	
 	char* rProductCategory = NULL;
 	while (!rProductCategory) {
 
@@ -978,23 +1000,51 @@ void addToCatalog() {
 		}
 	}
 
-	char output[200];
+	float rProductPrice = -1;
+	if (rProductPrice < 0) {
+
+		printf("Price --> ");
+		scanf_s("%f", &rProductPrice);
+
+		while (rProductPrice < 0) {
+			
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%f", &rProductPrice);
+
+		}
+	}
+
+	int rProductQuantity = -1;
+	if (rProductQuantity < 0) {
+
+		printf("Quantity --> ");
+		scanf_s("%d", &rProductQuantity);
+
+		while (rProductQuantity < 0) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &rProductQuantity);
+		}
+	}
+
+	char output[200] = { NULL };
 	sprintf(output, "%s,%s,%s,%.2f,%d\n", rProductName, rProductCompany, rProductCategory, rProductPrice, rProductQuantity);
 	writeFile(FILE_CATALOG, output);
 }
 void deleteFromCatalog(Product* p) {
 
-	char _Name[100], _Company[100], _Category[100], _Price[100], _Quantity[100], buf[500];
+	char _Name[100] = { NULL }, _Company[100] = { NULL }, _Category[100] = { NULL }, _Price[100] = { NULL }, _Quantity[100] = { NULL };
 
-	FILE* Temp = fopen(FILE_TEMP, "ab+");
+	FILE* Temp = fopen(FILE_TEMP, "w");
 	if (!Temp) exit(1);
 
 	FILE* CataLog = fopen(FILE_CATALOG, "r");
 	if (!CataLog) exit(1);
 
-	while (fscanf(CataLog, "%s", buf) == 1) {
+	char buffer[500] = { NULL };
+	while (fscanf(CataLog, "%s", buffer) == 1) {
 
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
+		sscanf(buffer, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
 
 		if (!(strcmp(p->name, _Name) == 0 && strcmp(p->company, _Company) == 0))
 			fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Company, _Category, _Price, _Quantity);
@@ -1005,44 +1055,38 @@ void deleteFromCatalog(Product* p) {
 
 	CataLog = fopen(FILE_CATALOG, "w");
 	if (!CataLog) exit(1);
-	fclose(CataLog);
-
-	CataLog = fopen(FILE_CATALOG, "ab+");
-	if (!CataLog) exit(1);
 
 	Temp = fopen(FILE_TEMP, "r");
 	if (!Temp) exit(1);
 
-	while (fscanf(Temp, "%s", buf) == 1) {
+	while (fscanf(Temp, "%s", buffer) == 1) {
 
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
+		sscanf(buffer, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
 		fprintf(CataLog, "%s,%s,%s,%s,%s\n", _Name, _Company, _Category, _Price, _Quantity);
 	}
 
 	fclose(CataLog);
 	fclose(Temp);
-
-	Temp = fopen(FILE_TEMP, "w");
-	if (!Temp) exit(1);
-	fclose(Temp);
 }
 void updateCatalog(Product* p, int userQuantity) {
 
-	int interface, updatedQuantity = -1;
+	char _Name[100] = { NULL }, _Company[100] = { NULL }, _Category[100] = { NULL }, _Price[100] = { NULL };
+	char buffer[500] = { NULL }, newPrice[100] = { NULL }, newQuantity[100] = { NULL }, _Quantity[100] = { NULL };
+	int interface = 0, updatedQuantity = -1;
 	float updatedPrice = -1;
-	char _Name[100], _Company[100], _Category[100], _Price[100], _Quantity[100], buf[500], newPrice[100], newQuantity[100];
 
-	FILE* Temp = fopen(FILE_TEMP, "ab+");
+	FILE* Temp = fopen(FILE_TEMP, "w");
 	if (!Temp) exit(1);
 
 	FILE* CataLog = fopen(FILE_CATALOG, "r");
 	if (!CataLog) exit(1);
 
+
 	if (userQuantity == -1) {
 
 		while (true) {
 
-			printf("'1' Update Price\t'2' Update Quantity\nInput --> ");
+			printf("\nProduct Actions\n'1' Update Price\t'2' Update Quantity\nInput --> ");
 			scanf_s("%d", &interface);
 
 			if (interface == 1 || interface == 2)
@@ -1050,24 +1094,27 @@ void updateCatalog(Product* p, int userQuantity) {
 		}
 	}
 
-	else 
+	else
 		interface = 2;
-
-	while (fscanf(CataLog, "%s", buf) == 1)
+	
+	while (fscanf(CataLog, "%s", buffer) == 1)
 	{
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
+		sscanf(buffer, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
 
 		if (strcmp(p->name, _Name) == 0 && strcmp(p->company, _Company) == 0) {
 
 			if (interface == 1) {
 
-				while (updatedPrice < 0) {
+				if (updatedPrice < 0) {
 
 					printf("Updated Price --> ");
 					scanf_s("%f", &updatedPrice);
 
-					if (updatedPrice < 0)
-						printf("Invalid input, Try again\n\n");
+					while (updatedPrice < 0) {
+
+						printf("Invalid input, Try again\nInput --> ");
+						scanf_s("%f", &updatedPrice);
+					}
 				}
 
 				sprintf(newPrice, "%.2f", updatedPrice);
@@ -1078,13 +1125,16 @@ void updateCatalog(Product* p, int userQuantity) {
 
 				if (userQuantity == -1) {
 
-					while (updatedQuantity < 0) {
+					if (updatedQuantity < 0) {
 
 						printf("Updated Quantity --> ");
 						scanf_s("%d", &updatedQuantity);
 
-						if (updatedQuantity < 0)
-							printf("Invalid input, Try again\n\n");
+						while (updatedQuantity < 0) {
+
+							printf("Invalid input, Try again\nInput --> ");
+							scanf_s("%d", &updatedQuantity);
+						}
 					}
 				}
 
@@ -1102,123 +1152,154 @@ void updateCatalog(Product* p, int userQuantity) {
 
 	CataLog = fopen(FILE_CATALOG, "w");
 	if (!CataLog) exit(1);
-	fclose(CataLog);
-
-	CataLog = fopen(FILE_CATALOG, "ab+");
-	if (!CataLog) exit(1);
 
 	Temp = fopen(FILE_TEMP, "r");
 	if (!Temp) exit(1);
 
+	while (fscanf(Temp, "%s", buffer) == 1) {
 
-	while (fscanf(Temp, "%s", buf) == 1) {
-
-		sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
+		sscanf(buffer, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Company, _Category, _Price, _Quantity);
 		fprintf(CataLog, "%s,%s,%s,%s,%s\n", _Name, _Company, _Category, _Price, _Quantity);
 	}
 
 	fclose(CataLog);
 	fclose(Temp);
-
-	Temp = fopen(FILE_TEMP, "w");
-	if (!Temp) exit(1);
-	fclose(Temp);
 }
 void seeTickets() {
 
-	char buf[500], _Index[50], _Report[400];
+	char buffer[500] = { NULL }, _Index[50] = { NULL }, _Report[400] = { NULL };
 
 	FILE* User = fopen(FILE_TICKET, "r");
 	if (!User) exit(1);
 
-	while (fgets(buf, 500, User))
-		printf("%s", buf);
+	while (fgets(buffer, 500, User))
+		printf("%s", buffer);
 
 	fclose(User);
 }
 void printRevenue() {
-	int ans;
-	printf("1. Last 30 days\n2. Last 7 days\n3. Current day\nSelect option -- > ");
-	scanf("%d", &ans);
-	while (!(ans <= 3 && ans >= 1)) {
-		printf("Incorrect selectio, please try again.\nSelect option -- > ");
-		scanf("%d", &ans);
-	}
-	Date tempDate;
-	FILE* file = fopen(FILE_ORDERS, "r");
-	int ordersCount = 0;
-	float revenue = 0;
-	char buffer[500];
-	while (fscanf(file, "%s", buffer) == 1) {
-		float price = 0;
-		sscanf(buffer, "%*[^,],%*[^,],%f,%d/%d/%d,%*[^,]", &price, &tempDate.day, &tempDate.month, &tempDate.year);
-		int dayDiff = calcDateDiff(tempDate);
-		if (ans == 1) {
-			if (dayDiff <= 30) {
-				revenue += price;
-				ordersCount++;
-			}
-		}
-		else if (ans == 2) {
-			if (dayDiff <= 7) {
-				revenue += price;
-				ordersCount++;
-			}
-		}
-		else if (ans == 3) {
-			if (dayDiff == 0) {
-				revenue += price;
-				ordersCount++;
-			}
 
+	int interface = -1, ordersCount = 0;
+	Date tempDate = { 0,0,0 };
+	float revenue = 0;
+	char buffer[500] = { NULL };
+
+	if (!(interface > 0 && interface <= 3)) {
+
+		printf("\nRevenue Action\n'1' Last 30 Days\t'2' Last 7 Days\t'3' Current Day\nInput -- > ");
+		scanf_s("%d", &interface);
+
+		while (!(interface > 0 && interface <= 3)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
+	}
+	
+	FILE* file = fopen(FILE_ORDERS, "r");
+	if (!file) exit(1);
+
+	
+	while (fscanf(file, "%s", buffer) == 1) {
+		
+		float price = 0;
+		
+		sscanf(buffer, "%*[^,],%*[^,],%f,%d/%d/%d,%*[^,]", &price, &tempDate.day, &tempDate.month, &tempDate.year);
+		
+		int dayDiff = calcDateDiff(tempDate);
+		
+		if (interface == 1) {
+
+			if (dayDiff <= 30) {
+
+				revenue += price;
+				ordersCount++;
+			}
+		}
+		
+		else if (interface == 2) {
+
+			if (dayDiff <= 7) {
+
+				revenue += price;
+				ordersCount++;
+			}
+		}
+		
+		else if (interface == 3) {
+
+			if (dayDiff == 0) {
+
+				revenue += price;
+				ordersCount++;
+			}
 		}
 	}
 	fclose(file);
-	printf("Revenue for the selected time period: %.2f from a total of %d orders.", revenue, ordersCount);
+	printf("Asked Revenue --> %.2f In %d Orders\n", revenue, ordersCount);
 }
 void showOrders() {
-	int option;
-	printf("1. Print All Orders\n2. Confirm Unconfirmed Orders\nSelect option --> ");
-	scanf("%d", &option);
-	while (!(option <= 3 && option >= 0)) {
-		printf("Invalid selection, please try again.\nSelect option --> ");
-		scanf("%d", &option);
+	
+	int* orders, *waitingOrders;
+	int interface = -1, count = 0, waitingCount = 0;
+	char buffer[500] = { NULL };
+	
+	if (!(interface > 0 && interface <= 2)) {
+
+		printf("\nOrders Actions\n'1' Print All Orders\t'2' Confirm/Unconfirmed Orders\nInput --> ");
+		scanf_s("%d", &interface);
+
+		while (!(interface > 0 && interface <= 2)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
 	}
-
+	
 	FILE* file = fopen(FILE_ORDERS, "r");
-	char buffer[500];
-	int count = 0;
-	int waitingCount = 0;
+	if (!file) exit(1);
 
-	int* orders;
-	int* waitingOrders;
 	while (fscanf(file, "%s", buffer) == 1) {
-		char status[30];
+
+		char status[30] = { NULL };
 		sscanf(buffer, "%*[^,],%*[^,],%*[^,],%*[^,],%[^,]", status);
-		if (strcmp(status, "WAITING") == 0) waitingCount++;
+		
+		if (strcmp(status, "WAITING") == 0) 
+			waitingCount++;
 		count++;
 	}
+	
 	fclose(file);
-	if (option == 1) {
-		//fclose(file);
+	
+	if (interface == 1) {
+
 		file = fopen(FILE_ORDERS, "r");
+		if (!file) exit(1);
+
 		orders = malloc(sizeof(int) * count);
-		printf("%-15s%-15s%-15s%-15s%-15s\n", "Order ID", "Customer ID", "Total", "Date", "Status");
+
+		printf("\n%-15s%-15s%-15s%-15s%-15s\n", "Order ID", "Customer ID", "Total", "Date", "Status");
+		
 		int i = 0;
 		while (fscanf(file, "%s", buffer) == 1) {
-			char customerId[30], date[40], status[30], address[40];
+			char customerId[30] = { NULL }, date[40] = { NULL }, status[30] = { NULL }, address[40] = { NULL };
 			int orderId = -1;
 			float price = -1;
+			
 			sscanf(buffer, "%d,%[^,],%f,%[^,],%[^,]", &orderId, customerId, &price, date, status);
 			printf("%-15d%-15s%-15.2f%-15s%-15s\n", orderId, customerId, price, date, status);
 			orders[i] = orderId;
 			i++;
 		}
+		
 		bool flag = false;
 		while (!flag) {
-			int ans;
+
+			int ans = 0;
+
 			printf("Select order (ID) -- > ");
-			scanf("%d", &ans);
+			scanf_s("%d", &ans);
+
 			for (int i = 0; i < count; i++) {
 				if (orders[i] == ans) {
 					printOrder(ans);
@@ -1230,20 +1311,28 @@ void showOrders() {
 			printf("Invalid selection, please try again.\n");
 		}
 	}
-	else if (option == 2) {
-		//fclose(file);
+
+	else if (interface == 2) {
+		
 		file = fopen(FILE_ORDERS, "r");
+		if (!file) exit(1);
+
 		waitingOrders = malloc(sizeof(int) * waitingCount);
-		printf("%-15s%-15s%-15s%-15s%-15s\n", "Order ID", "Customer ID", "Total", "Date", "Status");
+
+		printf("\n%-15s%-15s%-15s%-15s%-15s\n", "Order ID", "Customer ID", "Total", "Date", "Status");
+
 		int i = 0;
+
 		while (fscanf(file, "%s", buffer) == 1) {
-			char customerId[30], date[40], status[30];
+			char customerId[30] = { NULL }, date[40] = { NULL }, status[30] = { NULL };
 			int orderId = -1;
 			float price = -1;
+
 			sscanf(buffer, "%d,%[^,],%f,%[^,],%[^,]", &orderId, customerId, &price, date, status);
 			if (strcmp(status, "WAITING") == 0) {
 				printf("%-15d%-15s%-15.2f%-15s%-15s\n", orderId, customerId, price, date, status);
 				waitingOrders[i] = orderId;
+				i++;
 			}
 		}
 		bool flag = false;
@@ -1251,7 +1340,7 @@ void showOrders() {
 		while (!flag) {
 			int ans;
 			printf("Select order (ID) -- > ");
-			scanf("%d", &ans);
+			scanf_s("%d", &ans);
 			for (int i = 0; i < waitingCount; i++) {
 				if (waitingOrders[i] == ans) {
 					printOrder(ans);
@@ -1266,24 +1355,30 @@ void showOrders() {
 	}
 }
 void printOrder(int orderId) {
-	char source[300];
+
+	char source[300] = { NULL }, str[20] = { NULL }, name[100] = { NULL }, company[100] = { NULL }, category[100] = { NULL };
+	int count = 0, quantity = -1;
+	float price = -1;
+
 	sprintf(source, "%s%d.csv", FOLDER_DATA_ORDERS, orderId);
+
 	if (!doesFileExists(source)) {
 		printf("Order doesn't exist.");
 		return;
 	}
+
 	FILE* file = fopen(source, "r");
-	char str[20];
-	int count;
+	if (!file) exit(1);
+
 	fscanf(file, "%*d,%d,%s", &count, str);
-	printf("Order ID: %d from %s\n", orderId, str);
-	printf("%-15s%-15s%-15s%-15s%-15s\n", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
-	char name[100], company[100], category[100];
-	int quantity = -1;
-	float price = -1;
+
+	printf("\nOrder ID --> %d from %s\n", orderId, str);
+	printf("%-14s%-15s%-15s%-15s%s", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
+
+	
 	for (int i = 0; i < count; i++) {
 		fscanf(file, "%[^,],%[^,],%[^,],%f,%d", name, company, category, &price, &quantity);
-		printf("%-15s%-15s%-15s%-15.2f%-15d\n",
+		printf("%-15s%-15s%-15s%-15.2f%-15d",
 			name,
 			company,
 			category,
@@ -1291,48 +1386,64 @@ void printOrder(int orderId) {
 			quantity);
 	}
 	fscanf(file, "%f", &price);
-	printf("Total: %.2f", price);
+	printf("\nTotal --> %.2f\n", price);
 	fclose(file);
 }
 void changeOrderStatus(int id) {
+
+	int count = 0;
+	char buffer[500] = { NULL };
+	char* output = copyString("");
+
 	if (!doesFileExists(FILE_ORDERS)) {
 		printf("Orders file missing..?");
 		return;
 	}
+
 	FILE* file = fopen(FILE_ORDERS, "r");
-	int count = 0;
-	char buffer[500];
-	char* output = copyString("");
+	if (!file) exit(1);
+
 	while (fscanf(file, "%s", buffer) == 1) {
-		char temp[500];
-		char customerId[30], date[40], status[30];
+		char temp[500] = { NULL }, customerId[30] = { NULL }, date[40] = { NULL }, status[30] = { NULL };
 		int orderId = -1;
 		float price = -1;
+		
 		sscanf(buffer, "%d,%[^,],%f,%[^,],%[^,]", &orderId, customerId, &price, date, status);
 		sprintf(temp, "%d,%s,%f,%s,%s\n", orderId, customerId, price, date, id == orderId ? "CONFIRMED" : status);
 		appendString(&output, temp);
 	}
+
 	fclose(file);
+	
 	file = fopen(FILE_ORDERS, "w");
+	if (!file) exit(1);
+
 	fputs(output, file);
 	fclose(file);
 	free(output);
-	printf("Order has been approved.\n");
+	printf("Order Has Been Approved\n");
 }
 int calcDateDiff(Date d2) {
+
 	Date d1 = getCurrentDate();
 	int daysInMonth[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	int count1 = d1.year * 365 + d1.day;
 	int count2 = d2.year * 365 + d2.day;
-	for (int i = 0; i < d1.month; i++) count1 += daysInMonth[i];
-	for (int i = 0; i < d2.month; i++) count2 += daysInMonth[i];
+	
+	for (int i = 0; i < d1.month; i++) 
+		count1 += daysInMonth[i];
+	
+	for (int i = 0; i < d2.month; i++) 
+		count2 += daysInMonth[i];
+	
 	return count1 - count2;
 }
 Date getCurrentDate() {
+
 	Date date = { 0,0,0 };
 	struct tm* tm;
 	time_t t;
-	char str_date[100];
+	char str_date[100] = { NULL };
 	t = time(NULL);
 	tm = localtime(&t);
 	strftime(str_date, sizeof(str_date), "%d %m %Y", tm);
@@ -1341,13 +1452,50 @@ Date getCurrentDate() {
 }
 
 //Manager + Customer (Status)
+void registerUserType(UserType type) {
+
+	Details d;
+
+	printf("\nRegister Stage\n");
+
+	while (!verifyName(&d))
+		printf("Invalid, Try again\n\n");
+
+	while (!verifyPassword(&d))
+		printf("Invalid, Try again\n\n");
+
+	while (!verifyId(&d))
+		printf("Invalid, Try again!\n\n");
+
+	if (type == customer)
+		if (!verifyAge())
+			return;
+
+	while (!verifyPhone(&d))
+		printf("Invalid, Try again\n\n");
+
+	if (!termsAndConditions())
+		return;
+
+	writeUserType(&d, type);
+}
 void welcomeScreen() {
 
-	int interface;
+	int interface = -1;
 
-	printf("'1' Register\t'2' Login\t'3' Exit\nInput --> ");
-	scanf_s("%d", &interface);
+	if (!(interface > 0 && interface <= 3)) {
 
+		printf("Welcome To HomeScreen\n'1' Register\t'2' Login\t'3' Exit\nInput --> ");
+		scanf_s("%d", &interface);
+
+		while (!(interface > 0 && interface <= 3)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
+
+	}
+	
 	switch (interface) {
 
 	case 1:
@@ -1364,11 +1512,20 @@ void welcomeScreen() {
 }
 void registerStage() {
 
-	int interface, managerCode;
+	int interface = -1, managerCode = 0;
 
-	printf("\nSign up as:\n'1' Customer\t'2' Manager\t'3' Exit\nInput --> ");
-	scanf_s("%d", &interface);
+	if (!(interface > 0 && interface <= 3)) {
 
+		printf("\nRegister as\n'1' Customer\t'2' Manager\t'3' Exit\nInput --> ");
+		scanf_s("%d", &interface);
+
+		while (!(interface > 0 && interface <= 3)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
+	}
+	
 	switch (interface) {
 
 	case 1:
@@ -1394,7 +1551,7 @@ void loginUser() {
 
 	char* userId, * userPassword;
 
-	printf("\nID --> ");
+	printf("\nLogin Stage\nID --> ");
 	inputString(&userId);
 
 	Identity = userId;
@@ -1414,17 +1571,17 @@ void loginUser() {
 
 	if (strcmp(readUser(type == customer ? FILE_CUSTOMERS : FILE_MANAGERS, readPassword)->password, userPassword) == 0) {
 
-		printf("You've successfully logged in as a ");
+		printf("You've Logged As A ");
 
 		if (type == customer) {
 
-			printf("customer\n");
+			printf("Customer\n");
 			customerMenu();
 		}
 
 		if (type == manager) {
 
-			printf("manager.\n");
+			printf("Manager.\n");
 			managerMenu();
 		}
 	}
@@ -1434,10 +1591,19 @@ void loginUser() {
 }
 void profile() {
 
-	int interface;
+	int interface = -1;
 
-	printf("\n'1' Print Profile\t'2' Update Profile\t'3' Exit\nInput --> ");
-	scanf_s("%d", &interface);
+	if (!(interface > 0 && interface <= 3)) {
+
+		printf("\nProfile Actions\n'1' Print Profile\t'2' Update Profile\t'3' Exit\nInput --> ");
+		scanf_s("%d", &interface);
+
+		while (!(interface > 0 && interface <= 3)) {
+
+			printf("Invalid input, Try again\nInput --> ");
+			scanf_s("%d", &interface);
+		}
+	}
 
 	switch (interface) {
 
@@ -1456,78 +1622,99 @@ void profile() {
 void printProfile() {
 
 	Details* details = readUser(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, findUserType(Identity));
+	char n[100] = { NULL }, i[100] = { NULL }, p[100] = { NULL }, ph[100] = { NULL };
 
-	printf("\n1\n");
-	printf("Name --> %s\n", details->name);
-	printf("\n2\n");
+	strcpy(n, details->name);
+	strcpy(i, details->ID);
+	strcpy(p, details->password);
+	strcpy(ph, details->phone);
+	float po = details->points;
 
-	printf("ID --> %s\n", details->ID);
-	printf("\n3\n");
-
-	printf("Password --> %s\n", details->password);
-	printf("\n4\n");
-
-	printf("Phone --> %s\n", details->phone);
-	printf("\n5\n");
+	printf("\nName --> %s\n", n);
+	printf("ID --> %s\n", i);
+	printf("Password --> %s\n", p);
+	printf("Phone --> %s\n", ph);
 
 	if (findUserType(Identity) == customer)
-		printf("Supermarket Points --> %.2f\n", details->points);
-	printf("\n6\n");
-
+		printf("Supermarket Points --> %.2f\n", po);
 }
 void updateProfile() {
 
-	int interface;
-	char _Name[100], _Id[100], _Password[100], _Phone[100], _Points[100], buf[500];
-	char* newPassword, * newPhone;
+	int interface = -1;
+	char _Name[100] = { NULL }, _Id[100] = { NULL }, _Password[100] = { NULL }, _Phone[100] = { NULL }, _Points[100] = { NULL }, buffer[500] = { NULL };
+	Details d;
 
-	FILE* Temp = fopen(FILE_TEMP, "ab+");
+	FILE* Temp = fopen(FILE_TEMP, "w");
 	if (!Temp) exit(1);
 
 	FILE* User = fopen(findUserType(Identity) == customer ? FILE_CUSTOMERS : FILE_MANAGERS, "r");
 	if (!User) exit(1);
 
-	while (true) {
-
-		printf("\n'1' Change Password\t'2' Change Phone\nInput --> ");
-		scanf_s("%d", &interface);
-
-		if (interface != 1 && interface != 2)
-			printf("Invalid, Try again\n");
-
-		else
-			break;
-	}
-
 	if (findUserType(Identity) == customer) {
 
-		while (fscanf(User, "%s", buf) == 1) {
+		while (fscanf(User, "%s", buffer) == 1) {
 
-			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Phone, _Points);
+			sscanf(buffer, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Points, _Phone);
 
 			if ((strcmp(Identity, _Id)) == 0) {
 
-				if (interface == 1) {
+				if (!(interface > 0 && interface <= 4)) {
+					printf("\nChange Options\n'1' Name\t'2' ID\t'3' Password\t'4' Phone\nInput --> ");
+					scanf_s("%d", &interface);
 
-					while (true)
-						if (checkPassword(&newPassword))
-							break;
+					while (!(interface > 0 && interface <= 4)) {
 
-					fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Id, newPassword, _Phone, _Points);
+						printf("Invalid, Try again\nInput --> ");
+						scanf_s("%d", &interface);
+					}
 				}
 
-				if (interface == 2) {
+				switch (interface) {
 
-					while (true)
-						if (checkPhone(&newPhone))
+				case 1:
+					while (true) {
+
+						if (verifyName(&d))
+							break;
+					}
+
+					fprintf(Temp, "%s,%s,%s,%s,%s\n", d.name, _Id, _Password, _Points, _Phone);
+					break;
+
+				case 2:
+					while (true) {
+
+						if (verifyId(&d))
 							break;
 
-					fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Id, _Password, newPhone, _Points);
+					}
+
+					fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, d.ID, _Password, _Points, _Phone);
+					break;
+
+				case 3:
+					while (true) {
+
+						if (verifyPassword(&d))
+							break;
+					}
+					fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Id, d.password, _Points, _Phone);
+					break;
+
+				case 4:
+					while (true) {
+
+						if (verifyPhone(&d))
+							break;
+					}
+
+					fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Id, _Password, _Points, d.phone);
+					break;
 				}
 			}
 
 			else
-				fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Id, _Password, _Phone, _Points);
+				fprintf(Temp, "%s,%s,%s,%s,%s\n", _Name, _Id, _Password, _Points, _Phone);
 		}
 
 		fclose(Temp);
@@ -1535,50 +1722,80 @@ void updateProfile() {
 
 		User = fopen(FILE_CUSTOMERS, "w");
 		if (!User) exit(1);
-		fclose(User);
-
-		User = fopen(FILE_CUSTOMERS, "ab+");
-		if (!User) exit(1);
 
 		Temp = fopen(FILE_TEMP, "r");
 		if (!Temp) exit(1);
 
-		while (fscanf(Temp, "%s", buf) == 1) {
+		while (fscanf(Temp, "%s", buffer) == 1) {
 
-			sscanf(buf, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Phone, _Points);
-			fprintf(User, "%s,%s,%s,%s,%s\n", _Name, _Id, _Password, _Phone, _Points);
+			sscanf(buffer, "%[^,],%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Points, _Phone);
+			fprintf(User, "%s,%s,%s,%s,%s\n", _Name, _Id, _Password, _Points, _Phone);
 		}
-
-		Temp = fopen(FILE_TEMP, "w");
-		if (!Temp) exit(1);
 		fclose(Temp);
 		fclose(User);
 	}
 
-	if (findUserType(Identity) == manager) {
 
-		while (fscanf(User, "%s", buf) == 1) {
+	else if (findUserType(Identity) == manager) {
 
-			sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Phone);
+		while (fscanf(User, "%s", buffer) == 1) {
+
+			sscanf(buffer, "%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Phone);
 
 			if ((strcmp(Identity, _Id)) == 0) {
 
-				if (interface == 1) {
+				if (!(interface > 0 && interface <= 4)) {
+					printf("\nChange Options\n'1' Name\t'2' ID\t'3' Password\t'4' Phone\nInput --> ");
+					scanf_s("%d", &interface);
 
-					while (true)
-						if (checkPassword(&newPassword))
-							break;
+					while (!(interface > 0 && interface < 5)) {
 
-					fprintf(Temp, "%s,%s,%s,%s\n", _Name, _Id, newPassword, _Phone);
+						printf("Invalid, Try again\nInput --> ");
+						scanf_s("%d", &interface);
+					}
 				}
 
-				if (interface == 2) {
+				switch (interface) {
 
-					while (true)
-						if (checkPhone(&newPhone))
+				case 1:
+					while (true) {
+
+						if (verifyName(&d))
+							break;
+					}
+
+					fprintf(Temp, "%s,%s,%s,%s\n", d.name, _Id, _Password, _Phone);
+					break;
+
+				case 2:
+					while (true) {
+
+						if (verifyId(&d))
 							break;
 
-					fprintf(Temp, "%s,%s,%s,%s\n", _Name, _Id, _Password, newPhone);
+					}
+
+					fprintf(Temp, "%s,%s,%s,%s\n", _Name, d.ID, _Password, _Phone);
+					break;
+
+				case 3:
+					while (true) {
+
+						if (verifyPassword(&d))
+							break;
+					}
+					fprintf(Temp, "%s,%s,%s,%s\n", _Name, _Id, d.password, _Phone);
+					break;
+
+				case 4:
+					while (true) {
+
+						if (verifyPhone(&d))
+							break;
+					}
+
+					fprintf(Temp, "%s,%s,%s,%s\n", _Name, _Id, _Password, d.phone);
+					break;
 				}
 			}
 
@@ -1591,23 +1808,15 @@ void updateProfile() {
 
 		User = fopen(FILE_MANAGERS, "w");
 		if (!User) exit(1);
-		fclose(User);
-
-		User = fopen(FILE_MANAGERS, "ab+");
-		if (!User) exit(1);
 
 		Temp = fopen(FILE_TEMP, "r");
 		if (!Temp) exit(1);
 
-		while (fscanf(Temp, "%s", buf) == 1) {
+		while (fscanf(Temp, "%s", buffer) == 1) {
 
-			sscanf(buf, "%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Phone);
+			sscanf(buffer, "%[^,],%[^,],%[^,],%[^,]", _Name, _Id, _Password, _Phone);
 			fprintf(User, "%s,%s,%s,%s\n", _Name, _Id, _Password, _Phone);
 		}
-
-		fclose(Temp);
-		Temp = fopen(FILE_TEMP, "w");
-		if (!Temp) exit(1);
 		fclose(Temp);
 		fclose(User);
 	}
@@ -1615,15 +1824,14 @@ void updateProfile() {
 bool doesProductExist(char* filename, char* _productName, char* _company) {
 
 	Product tempProduct = { NULL, NULL, NULL, 0, 0 };
-	char name[100], company[100];
+	char name[100] = { NULL }, company[100] = { NULL }, buffer[500] = { NULL };
 
 	FILE* file = fopen(filename, "r");
 	if (!file) exit(1);
 
-	char buf[500];
-	while (fscanf(file, "%s", buf) == 1) {
+	while (fscanf(file, "%s", buffer) == 1) {
 
-		sscanf(buf, "%[^,],%[^,],%*[^,],%*d,%*f", name, company);
+		sscanf(buffer, "%[^,],%[^,],%*[^,],%*d,%*f", name, company);
 
 		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0) {
 
@@ -1636,11 +1844,12 @@ bool doesProductExist(char* filename, char* _productName, char* _company) {
 	return false;
 }
 Product selectProduct(Cart cart) {
-	Product product = { NULL, NULL, NULL, 0, 0 };
 
-	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "ID", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
-	int i = 1;
-	char buffer[500];
+	Product product = { NULL, NULL, NULL, 0, 0 };
+	int i = 1, res = 0;
+	char buffer[500] = { NULL };
+
+	printf("\n%-15s%-15s%-15s%-15s%-15s%-15s\n", "ID", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
 
 	for (i = 0; i < cart.itemsCount; i++) {
 		printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n",
@@ -1652,11 +1861,9 @@ Product selectProduct(Cart cart) {
 			cart.products[i].quantity);
 	}
 
-	printf("Enter 0 to sort the products by ascending price\n");
-	printf("Or select a product --> ");
-
-	int res = 0;
+	printf("\nAvailable Action\n'0' Sort By Ascending Price\tElse Select Product\nInput --> ");
 	scanf_s("%d", &res);
+
 sort:
 	if (res == 0) {
 		for (int p = 0; p < cart.itemsCount; p++) {
@@ -1669,7 +1876,7 @@ sort:
 			}
 		}
 
-		printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "ID", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
+		printf("\n%-15s%-15s%-15s%-15s%-15s%-15s\n", "ID", "NAME", "COMPANY", "CATEGORY", "PRICE", "QUANTITY");
 		for (int i = 0; i < cart.itemsCount; i++) {
 			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n",
 				i + 1,
@@ -1680,7 +1887,7 @@ sort:
 				cart.products[i].quantity);
 		}
 
-		printf("Select product --> ");
+		printf("Select Product --> ");
 		scanf_s("%d", &res);
 		while (!(res - 1 >= 0 && res - 1 < i)) {
 			printf("Invalid selection, please try again.\n");
@@ -1701,18 +1908,17 @@ sort:
 	return product;
 }
 Product readProduct(char* filename, char* _productName, char* _company) {
+
 	Product tempProduct = { NULL, NULL, NULL, 0, 0 };
-	char name[100], company[100], category[100];
-	int quantity;
-	float price;
+	char name[100] = { NULL }, company[100] = { NULL }, category[100] = { NULL }, buffer[500] = { NULL };
+	int quantity = 0;
+	float price = 0;
 
 	FILE* file = fopen(filename, "r");
 	if (!file) exit(1);
 
-
-	char buf[500];
-	while (fscanf(file, "%s", buf) == 1) {
-		sscanf(buf, "%[^,],%[^,],%[^,],%f, %d", name, company, category, &price, &quantity);
+	while (fscanf(file, "%s", buffer) == 1) {
+		sscanf(buffer, "%[^,],%[^,],%[^,],%f, %d", name, company, category, &price, &quantity);
 
 		if (strcmp(_productName, name) == 0 && strcmp(_company, company) == 0) {
 
@@ -1725,13 +1931,14 @@ Product readProduct(char* filename, char* _productName, char* _company) {
 Cart retrieveProducts(bool returnAll, char* search, char* searchCategory) {
 
 	int count = 0;
+	char buffer[500] = { NULL };
 
 	FILE* file = fopen(FILE_CATALOG, "r");
+	if (!file) exit(1);
 
-	char buffer[500];
 	while (fscanf(file, "%s", buffer) == 1) {
 
-		char name[40], company[40], category[40];
+		char name[40] = { NULL }, company[40] = { NULL }, category[40] = { NULL };
 		int quantity = -1;
 
 		sscanf(buffer, "%[^,],%[^,],%[^,],%*f,%d", name, company, category, &quantity);
@@ -1761,7 +1968,7 @@ Cart retrieveProducts(bool returnAll, char* search, char* searchCategory) {
 	int quantity = -1;
 	float price = -1;
 	int ite = 0;
-	Cart cart;
+	Cart cart = { 0, NULL };
 	cart.products = malloc(sizeof(Product) * count);
 	cart.itemsCount = count;
 	fclose(file);
@@ -1796,102 +2003,42 @@ Cart retrieveProducts(bool returnAll, char* search, char* searchCategory) {
 	return cart;
 }
 
-//Temp
-bool checkPassword(char** _Password)
-{
-	char str[100];
-	int letters = 0, numbers = 0;
-
-	printf("Password --> ");
-	scanf_s("%s", str, 100);
-
-	if (strlen(str) < MIN_PASSWORD_LEN)
-		return false;
-
-	for (int i = 0; i < strlen(str); i++)
-	{
-		if (!(str[i] >= 'a' && str[i] <= 'z'))
-		{
-			if (!(str[i] >= 'A' && str[i] <= 'Z'))
-			{
-				if (!(str[i] >= '0' && str[i] <= '9'))
-					return false;
-				else numbers++;
-			}
-			else letters++;
-		}
-		else letters++;
-	}
-
-	if (!numbers)
-		printf("Password must contain at least one number\n");
-
-	if (!letters)
-		printf("Password must contain at least one letter\n");
-
-	if (letters && numbers)
-	{
-		*_Password = malloc(strlen(str) * sizeof(char) + sizeof(char));
-		strcpy(*_Password, str);
-		return true;
-	}
-	return false;
-}
-bool checkPhone(char** _Phone)
-{
-	char str[100];
-
-	printf("Phone --> ");
-	scanf_s("%s", str, 100);
-
-	if (str == NULL)
-		exit(1);
-
-	for (int i = 0; i < strlen(str); i++)
-	{
-		if (!(str[i] >= '0' && str[i] <= '9'))
-		{
-			printf("Phone number contain only Digits!\n");
-			return false;
-		}
-	}
-
-	if (strlen(str) != PHONE_NUM_LEN)
-	{
-		printf("Phone number must contain ten Digits!\n");
-		return false;
-	}
-
-	*_Phone = malloc(strlen(str) * sizeof(char) + sizeof(char));
-	strcpy(*_Phone, str);
-
-	return true;
-}
-
 //Place in the right subject
 int getNextOrderId() {
-	int next;
+
+	int next = 0;
+
 	FILE* file = fopen(FILE_GLOBAL, "r");
+	if (!file) exit(1);
+
 	fscanf(file, "%d", &next);
 	fclose(file);
 	return next;
 }
 char* getNextOrderIdStr() {
+
 	char* str = malloc(sizeof(char) * 100);
+
 	FILE* file = fopen(FILE_GLOBAL, "r");
+	if (!file) exit(1);
+
 	fscanf(file, "%s", str);
 	fclose(file);
 	return str;
 }
 void appendOrderId() {
-	int next;
+
+	int next = 0;
+
 	FILE* file = fopen(FILE_GLOBAL, "r");
+	if (!file) exit(1);
+
 	fscanf(file, "%d", &next);
 	fclose(file);
 	file = fopen(FILE_GLOBAL, "w");
 	fprintf(file, "%d", ++next);
+	fclose(file);
 }
-
 int main() {
 
 	checkFolder();
