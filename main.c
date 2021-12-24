@@ -189,18 +189,29 @@ bool verifyPassword(Details* d) {
 		else letters++;
 	}
 
-	if (!numbers)
+	if (!numbers) {
 		printf("Password Must Contain At Least One Number\n");
+		return false;
+	}
 
-	if (!letters)
+	if (!letters) {
 		printf("Password Must Contain At Least One letter\n");
+		return false;
+	}
+
+	char* passwordVerification;
+	printf("Password verification --> ");
+	inputString(&passwordVerification);
+	if (!strcmp(passwordVerification, str) == 0) {
+		printf("Password verifciation failed.\n");
+		return verifyPassword(d);
+	}
 
 	if (letters && numbers) {
 
 		d->password = str;
 		return true;
 	}
-
 	return false;
 }
 bool verifyId(Details* d) {
@@ -449,7 +460,7 @@ void customerShop(Cart* cart) {
 
 	if (!product.name) {
 
-		printf("Something went wrong.\n");
+		printf("No products founds.\n");
 		return;
 	}
 
@@ -706,11 +717,12 @@ void writeOrder(Cart* cart, char* id) {
 	appendOrderId();
 
 	Details* user = readUser(FILE_CUSTOMERS, customer);
+	float temp = user->points;
 
 	int ans = 0;
-	if (user->points != 0) {
+	if (temp != 0) {
 
-		printf("\nAvailable Market Points --> %.2f, Would You Like To Reedem em ? '1' Yes\t'2' No\nInput --> ", user->points);
+		printf("\nAvailable Market Points --> %.2f, Would You Like To Reedem em ? '1' Yes\t'2' No\nInput --> ", temp);
 		scanf_s("%d", &ans);
 
 		while (ans != 1 && ans != 2) {
@@ -719,11 +731,11 @@ void writeOrder(Cart* cart, char* id) {
 			scanf_s("%d", &ans);
 		}
 		if (ans == 1) {
-			updatePoints(id, user->points > total ? user->points - total : 0);
+			updatePoints(id, temp > total ? temp - total : 0);
 		}
 	}
 	printf("In This Purchase You've Earned %.2f Market Points (3%% Of Your Purchase Amount)\n", total * 0.03);
-	updatePoints(id, user->points + total * 0.03);
+	updatePoints(id, temp + total * 0.03);
 }
 void finishOrder(Cart* cart, char* id) {
 
@@ -839,9 +851,9 @@ Product selectByCategory() {
 	}
 
 	if (count == 0) {
-
+		Product product = { NULL, NULL, NULL, 0, 0 };
 		printf("No categories found..?\n");
-		return;
+		return product;
 	}
 
 	int ans = -1;
@@ -849,11 +861,11 @@ Product selectByCategory() {
 
 		printf("Input No. --> ");
 		scanf_s("%d", &ans);
-		ans--;
 
 		if (!(ans > 0 && ans <= count))
 			printf("Invalid input, Try again\n");
 	}
+	ans--;
 	tempCart = retrieveProducts(false, NULL, categories[ans]);
 	return selectProduct(tempCart);
 }
