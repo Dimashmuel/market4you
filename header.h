@@ -1,4 +1,6 @@
-// CONSTS
+#pragma once
+
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,135 +8,161 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 
-// CONSTS
+
+// Consts
 #define LEGAL_AGE 16
 #define MANAGER_CODE 1111
 #define PHONE_NUM_LEN 10
 #define MIN_PASSWORD_LEN 6
-
-// FILES
-#define FILE_CUSTOMERS "data\\users\\customers.csv"
-#define FILE_MANAGERS "data\\users\\managers.csv"
-#define FILE_TEMP "data\\users\\temp.csv"
-#define FILE_TICKET "data\\tickets\\ticket.csv"
-#define FILE_CATALOG "data\\catalog.csv"
-#define FILE_GLOBAL "data\\global.csv"
-#define FILE_ORDERS "data\\orders.csv"
-#define FILE_ORDER "data\\temp.csv"
+#define CREADIT_CARD 16
 
 
-// FOLDERS
-#define FOLDER_DATA "data\\"
-#define FOLDER_DATA_USERS "data\\users\\"
-#define FOLDER_DATA_ORDERS "data\\orders\\"
-#define FOLDER_DATA_TICKETS "data\\tickets"
+// Files
+#define FILE_TEMP "Data\\Temp.csv"
+#define FILE_ORDERS "Data\\Orders\\Order.csv"
+#define FILE_TICKETS "Data\\Tickets\\Ticket.csv"
+#define FILE_MANAGERS "Data\\Users\\Managers.csv"
+#define FILE_CATALOGS "Data\\Catalogs\\Catalog.csv"
+#define FILE_CUSTOMERS "Data\\Users\\Customers.csv"
 
+
+// Folders
+#define FOLDER_DATA "Data\\"
+#define FOLDER_DATA_USERS "Data\\Users\\"
+#define FOLDER_DATA_ORDERS "Data\\Orders\\"
+#define FOLDER_DATA_TICKETS "Data\\Tickets\\"
+#define FOLDER_DATA_CATALOGS "Data\\Catalogs\\"
+#define FOLDER_DATA_TICKETS_TICKETSUMMARY "Data\\Tickets\\TicketSummary\\"
+#define FOLDER_DATA_ORDERS_ORDERSUMMARY "Data\\Orders\\OrderSummary\\"
+
+
+// Enums
 typedef enum { readId, readPassword, readName, readPhone, readSupermarketPoints } FieldUser;
 typedef enum { productName, productCompany, productCategory, productQuantity, productPrice } FieldProduct;
 typedef enum { none, customer, manager } UserType;
 typedef enum { false, true } bool;
 
-// Global variables
-char* Identity;
 
-/// <summary>
-/// STRUCTS
-/// </summary>
-typedef struct Details {
+// Structs
+typedef struct Details 
+{
 	char* name;
 	char* ID;
 	char* password;
 	char* phone;
 	float points;
 } Details;
-
-typedef struct Product {
+typedef struct Product 
+{
 	char* name;
 	char* company;
 	char* category;
 	int quantity;
 	float price;
 } Product;
-
-typedef struct Date {
+typedef struct Date 
+{
 	int day, month, year;
 } Date;
-
-typedef struct Order {
+typedef struct Order 
+{
 	Product* products;
 	Date date;
 	char* customerId;
 	char* orderId;
 	char* totalOrder;
 } Order;
-
-typedef struct Cart {
+typedef struct Cart 
+{
 	Product* products;
 	int itemsCount;
 } Cart;
 
-Product selectByCategory();
-// String functions definitions 
-void inputString(char** _str);
-void appendString(char** _str1, char* _str2);
-void appendStringComma(char** _str1, char* _str2);
-void appendStringNewLine(char** _str1, char* _str2);
-char* copyString(char* _str);
 
-// Files functions definitions
-void checkFiles();
-void checkFolder();
-void createFolder(char* dirname);
+// Global Variables
+char* Identity;
+
+
+// Strings
+void inputString(char** _Str);
+void appendString(char** _Str1, char* _Str2);
+void appendStringComma(char** _Str1, char* _Str2);
+void appendStringNewLine(char** _Str1, char* _Str2);
+char* copyString(char* _Str);
+char* strToLower(char* _Str);
+float stringToFloat();
+int stringToInt();
+
+
+// Files
+void checkFiles(); 
+void checkFolder(); 
+void createFolder(char* dirname); 
 void writeFile(char* filename, char* content);
-void writeUserType(Details* d, UserType type);
-Details readUser(char* filename, char* id);
+void writeUserType(Details* d, UserType type); 
 bool doesFileExists(char* filename);
-FILE* openFile(char* filename, char* access, char* skipFormat);
+Details* readUser(char* filename, UserType type);
+UserType findUserType();
 
-// Authentication functions definitions
-void registerUserType(UserType type);
+
+// Authentication
 bool verifyName(Details* d);
 bool verifyPassword(Details* d);
+bool verifyId(Details* d);
 bool verifyAge();
 bool verifyPhone(Details* d);
 bool termsAndConditions();
-UserType findUserType(char* id);
-void loginUser();
+bool verifyCreaditCard();
+bool verifyCCV();
+bool verifyMonth();
+bool verifyYear();
 
-// Catalog & cart functions definitions
-void catalogAddProduct();
-void changeQuantity(Cart* cart, int index, int newQuantity);
-void printProduct(Product* product);
-bool doesProductExist(char* filename, char* _productName, char* _company);
-void changeQuantity(Cart* cart, int index, int newQuantity);
-void removeFromCart(Cart* cart, int index);
-bool verifyPayment(char* creditCard, char* ccv, int expirationMonth, int expirationYear);
-void finishOrder(Cart* cart);
-Product selectProduct();
-Date getCurrentDate();
-void writeOrder(Cart* cart, char* id);
-void printRevenue();
-void updatePoints(char* id, float newPoints);
 
-// Menu functions definitions
-void welcomeScreen();
+//CustomerMenu
 void customerMenu();
-void managerMenu();
+void customerShop(Cart* cart);
+void viewCart(Cart* cart);
+void printCart(Cart* cart);
+void openTicket();
 void addToCart(Cart* cart, Product product);
+void removeFromCart(Cart* cart, int index);
+void changeQuantity(Cart* cart, int index, int newQuantity);
+void writeOrder(Cart* cart);
+void finishOrder(Cart* cart);
+void updatePoints(float newPoints);
+Product selectByCategory();
 
-void registerStage();
-void profile();
-void updateProfile();
-void printProfile();
 
+//ManagerMenu
+void managerMenu();
 void managerStoreActions();
-bool checkPassword(char** _Password);
-bool checkPhone(char** _Phone);
-void updateCatalog(Product* p, int updateQuantity);
+void addToCatalog();
 void deleteFromCatalog(Product* p);
-// Global
-/*
-char* userId;
-UserType user;
-*/
+void updateCatalog(Product* p, int userQuantity);
+void seeTickets();
+void printTicket(int ticketId);
+void changeTicketStatus(int id);
+void printRevenue();
+void showOrders();
+void printOrder(int orderId);
+void changeOrderStatus(int id);
+int calcDateDiff(Date d2);
+Date getCurrentDate();
+
+
+//General
+void registerUserType(UserType type);
+void welcomeScreen();
+void registerStage();
+void loginUser();
+void profile();
+void printProfile();
+void updateProfile();
+char* getNextOrderIdStr();
+char* getNextTicketIdStr();
+bool doesProductExist(char* filename, char* _ProductName, char* _Company);
+Product selectProduct(Cart cart);
+Product readProduct(char* filename, char* _ProductName, char* _Company);
+Cart retrieveProducts(bool returnAll, char* search, char* searchCategory);
