@@ -249,39 +249,35 @@ bool verifyId(Details* d)
 	long idVal = strtol(pString, NULL, 10);
 	int Digit1 = 0, Digit2 = 0, Digit3 = 0, Digit4 = 0, Digit5 = 0, Digit6 = 0, Digit7 = 0, Digit8 = 0, Digit9 = 0, Sum = 0, Res = 0;
 
-	if ((idVal <= 999999999) && (idVal >= 100000000)) 
+	if ((idVal >= 10000000) && (idVal <= 999999999)) 
 	{
-		Digit1 = (idVal % 1000000000) / 100000000;
-		Digit2 = (idVal % 100000000) / 10000000;
-		Digit3 = (idVal % 10000000) / 1000000;
-		Digit4 = (idVal % 1000000) / 100000;
-		Digit5 = (idVal % 100000) / 10000;
-		Digit6 = (idVal % 10000) / 1000;
-		Digit7 = (idVal % 1000) / 100;
-		Digit8 = (idVal % 100) / 10;
-		Digit9 = (idVal % 10);
+		Digit1 = idVal / 100000000 * 1;
+		Digit2 = idVal / 10000000 % 10 * 2;
+		Digit3 = idVal / 1000000 % 10 * 1;
+		Digit4 = idVal / 100000 % 10 * 2;
+		Digit5 = idVal / 10000 % 10 * 1;
+		Digit6 = idVal / 1000 % 10 * 2;
+		Digit7 = idVal / 100 % 10 * 1;
+		Digit8 = idVal / 10 % 10 * 2;
+		Digit9 = idVal % 10;
 
-		Digit1 = Digit1 * 1;
-		Digit2 = Digit2 * 2;
-		Digit3 = Digit3 * 1;
-		Digit4 = Digit4 * 2;
-		Digit5 = Digit5 * 1;
-		Digit6 = Digit6 * 2;
-		Digit7 = Digit7 * 1;
-		Digit8 = Digit8 * 2;
-
-		Digit2 = ((Digit2 / 10) + (Digit2 % 10));
-		Digit4 = ((Digit4 / 10) + (Digit4 % 10));
-		Digit6 = ((Digit6 / 10) + (Digit6 % 10));
-		Digit8 = ((Digit8 / 10) + (Digit8 % 10));
-
-		Sum = Digit1 + Digit2 + Digit3 + Digit4 + Digit5 + Digit6 + Digit7 + Digit8;
-
-		Res = 10 - (Sum % 10);
-
-		if (Res == Digit9) 
+		if (Digit1 >= 10 || Digit2 >= 10 || Digit3 >= 10 || Digit4 >= 10 || Digit5 >= 10 || Digit6 >= 10 || Digit7 >= 10 || Digit8 >= 10 || Digit9 >= 10)
 		{
-			if (findUserType(pString)) 
+			Digit1 = (Digit1 / 10) + (Digit1 % 10);
+			Digit2 = (Digit2 / 10) + (Digit2 % 10);
+			Digit3 = (Digit3 / 10) + (Digit3 % 10);
+			Digit4 = (Digit4 / 10) + (Digit4 % 10);
+			Digit5 = (Digit5 / 10) + (Digit5 % 10);
+			Digit6 = (Digit6 / 10) + (Digit6 % 10);
+			Digit7 = (Digit7 / 10) + (Digit7 % 10);
+			Digit8 = (Digit8 / 10) + (Digit8 % 10);
+			Digit9 = (Digit9 / 10) + (Digit9 % 10);
+		}
+		Sum = Digit1 + Digit2 + Digit3 + Digit4 + Digit5 + Digit6 + Digit7 + Digit8 + Digit9;
+		
+		if (Sum % 10 == 0)
+		{
+			if (findUserType(pString))
 			{
 				printf("ID Already Exist In The System\n");
 
@@ -293,7 +289,7 @@ bool verifyId(Details* d)
 					printf("\nAvailable Actions\n'1' Wrong ID     '2' Report For Identity Steal\nInput --> ");
 					selection = stringToInt();
 
-					switch (selection) 
+					switch (selection)
 					{
 					case 1:
 						printf("You've Chose To Re Enter Other ID\n\n");
@@ -316,8 +312,8 @@ bool verifyId(Details* d)
 			d->ID = pString;
 			return true;
 		}
-
-		else if (Res != Digit9)
+	
+		else
 		{
 			printf("Incorrect ID\n\n");
 			return false;
@@ -326,7 +322,7 @@ bool verifyId(Details* d)
 
 	else
 	{
-		printf("ID Must Contain Nine Didits\n\n");
+		printf("ID Must Contain Nine Digits\n\n");
 		return false;
 	}
 }
